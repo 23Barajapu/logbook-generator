@@ -1,0 +1,39 @@
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+.env
+.env.backup
+.env.production
+.env.*.local
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+
+# Dokumen dan data pribadi
+BUKU AKTIVITAS HARIAN*
+*.docx
+*.pdf
+scratch/
+
+# File storage upload dan lampiran pengguna
+/storage/app/public/*
+!/storage/app/public/.gitignore
+/storage/app/temp/*
+
+# OS generated files
+.DS_Store
+Thumbs.db

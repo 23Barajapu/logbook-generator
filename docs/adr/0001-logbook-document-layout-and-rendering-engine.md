@@ -1,0 +1,3 @@
+# 0001. Standardisasi Layout Landscape A4 dan Dual Generator Engine
+
+Sistem membutuhkan generator dokumen Buku Aktivitas Harian PKL dalam format DOCX dan PDF yang 100% konsisten dengan standar institusi dan industri mitra. Kami memutuskan menerapkan orientasi penuh Landscape A4 dengan struktur tabel aktivitas 3-kolom per hari dan bukti gambar tersemat langsung, menggunakan kombinasi PhpWord untuk DOCX dan Blade DOMPDF untuk PDF. Keputusan ini dipilih karena meniadakan dependensi headless office server yang berat, menjaga efisiensi resource deployment, dan menghasilkan tata letak visual yang presisi di kedua format.
