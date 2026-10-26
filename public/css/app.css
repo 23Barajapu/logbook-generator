@@ -952,3 +952,99 @@ textarea.form-control {
     line-height: 1.4;
 }
 
+/* ── Pagination Styling & Chevron Constraint ── */
+.pagination-container,
+nav[role="navigation"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 0 4px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.pagination-info,
+nav[role="navigation"] p,
+nav[role="navigation"] .text-sm {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.pagination-info .font-medium,
+nav[role="navigation"] .font-medium {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.pagination-links,
+nav[role="navigation"] .shadow-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn,
+nav[role="navigation"] a,
+nav[role="navigation"] span > span.inline-flex {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: var(--r-sm);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+    text-decoration: none;
+    box-shadow: none;
+    cursor: pointer;
+    transition: var(--t-fast);
+    user-select: none;
+}
+
+.pagination-btn:hover:not(.disabled):not(.active),
+nav[role="navigation"] a:hover {
+    background: var(--bg-hover) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--accent) !important;
+}
+
+.pagination-btn.active,
+nav[role="navigation"] span[aria-current="page"] > span {
+    background: var(--accent) !important;
+    color: #ffffff !important;
+    border-color: var(--accent) !important;
+    font-weight: 700;
+}
+
+.pagination-btn.disabled,
+nav[role="navigation"] span[aria-disabled="true"] > span {
+    opacity: 0.35 !important;
+    cursor: not-allowed !important;
+    background: var(--bg-base) !important;
+    border-color: var(--border) !important;
+}
+
+/* Strict constraint on any SVG chevrons inside nav or with w-5/h-5 */
+nav[role="navigation"] svg,
+.pagination-container svg,
+.w-5,
+.h-5,
+svg.w-5.h-5 {
+    width: 18px !important;
+    height: 18px !important;
+    max-width: 18px !important;
+    max-height: 18px !important;
+    min-width: 18px !important;
+    min-height: 18px !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    flex-shrink: 0 !important;
+}
+
