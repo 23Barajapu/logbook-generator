@@ -101,9 +101,11 @@ class DocxImportService
             $relsDoc = new DOMDocument();
             @$relsDoc->loadXML($relsXml);
             foreach ($relsDoc->getElementsByTagName('Relationship') as $rel) {
-                $id = $rel->getAttribute('Id');
-                $target = $rel->getAttribute('Target');
-                $rels[$id] = $target;
+                if ($rel instanceof \DOMElement) {
+                    $id = $rel->getAttribute('Id');
+                    $target = $rel->getAttribute('Target');
+                    $rels[$id] = $target;
+                }
             }
         }
 
@@ -186,27 +188,29 @@ class DocxImportService
                             // Extract images from cell 1
                             $blips = $xpath->query('.//a:blip', $cells->item(1));
                             foreach ($blips as $blip) {
-                                $embedId = $blip->getAttribute('r:embed');
-                                if (isset($rels[$embedId])) {
-                                    $target = $rels[$embedId];
-                                    $targetClean = ltrim(str_replace('\\', '/', $target), '/');
-                                    $pathInZip = str_starts_with($targetClean, 'word/') ? $targetClean : 'word/' . $targetClean;
+                                if ($blip instanceof \DOMElement) {
+                                    $embedId = $blip->getAttribute('r:embed');
+                                    if (isset($rels[$embedId])) {
+                                        $target = $rels[$embedId];
+                                        $targetClean = ltrim(str_replace('\\', '/', $target), '/');
+                                        $pathInZip = str_starts_with($targetClean, 'word/') ? $targetClean : 'word/' . $targetClean;
 
-                                    $imgBinary = $zip->getFromName($pathInZip);
-                                    if ($imgBinary !== false) {
-                                        $ext = pathinfo($targetClean, PATHINFO_EXTENSION) ?: 'png';
-                                        $tempFilename = 'day' . $dayNum . '_' . Str::random(8) . '.' . strtolower($ext);
-                                        $relativeSavedPath = $tempRelativeDir . '/' . $tempFilename;
+                                        $imgBinary = $zip->getFromName($pathInZip);
+                                        if ($imgBinary !== false) {
+                                            $ext = pathinfo($targetClean, PATHINFO_EXTENSION) ?: 'png';
+                                            $tempFilename = 'day' . $dayNum . '_' . Str::random(8) . '.' . strtolower($ext);
+                                            $relativeSavedPath = $tempRelativeDir . '/' . $tempFilename;
 
-                                        Storage::disk('public')->put($relativeSavedPath, $imgBinary);
+                                            Storage::disk('public')->put($relativeSavedPath, $imgBinary);
 
-                                        $extractedImages[] = [
-                                            'file_name' => basename($targetClean),
-                                            'temp_path' => $relativeSavedPath,
-                                            'preview_url' => asset('storage/' . $relativeSavedPath),
-                                            'file_size' => strlen($imgBinary),
-                                            'file_type' => strtolower($ext),
-                                        ];
+                                            $extractedImages[] = [
+                                                'file_name' => basename($targetClean),
+                                                'temp_path' => $relativeSavedPath,
+                                                'preview_url' => asset('storage/' . $relativeSavedPath),
+                                                'file_size' => strlen($imgBinary),
+                                                'file_type' => strtolower($ext),
+                                            ];
+                                        }
                                     }
                                 }
                             }

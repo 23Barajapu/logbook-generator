@@ -156,7 +156,7 @@ class DocumentService
                 continue;
             }
 
-            $mon = $act->activity_date->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
+            $mon = $act->activity_date->copy()->startOfWeek(\Carbon\CarbonInterface::MONDAY);
             $fri = $mon->copy()->addDays(4);
 
             $key = $mon->format('Y-m-d');
