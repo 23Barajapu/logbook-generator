@@ -10,7 +10,7 @@
 > [!TIP]
 > ### 📥 Akses Langsung Unduh Template Laporan (.docx)
 > Butuh format dokumen standar yang siap diisi offline dan 100% kompatibel dengan ekstraksi otomatis sistem ini?
-> - **Direct Download (File Repo):** [Template_Logbook_PKL.docx](public/templates/Template_Logbook_PKL.docx)
+> - **Direct Download (File Repo):** [TEMPLATE BUKU AKTIVITAS HARIAN (logbook) 2026.docx](public/templates/TEMPLATE%20BUKU%20AKTIVITAS%20HARIAN%20(logbook)%202026.docx)
 > - **Direct Download (Web Route):** Akses langsung via peramban pada URL `http://localhost:8000/template-logbook` (tanpa perlu autentikasi login).
 
 ---
@@ -18,14 +18,13 @@
 ## Daftar Isi
 
 1. [Fitur Utama](#fitur-utama)
-2. [Tumpukan Teknologi](#tumpukan-teknologi)
-3. [Arsitektur & Alur Kerja](#arsitektur--alur-kerja)
-4. [Persyaratan Sistem](#persyaratan-sistem)
-5. [Panduan Instalasi](#panduan-instalasi)
-6. [Akun Pengujian Bawaan](#akun-pengujian-bawaan)
-7. [Format Dokumen & Ekstraksi Cerdas](#format-dokumen--ekstraksi-cerdas)
-8. [Pengujian Otomatis](#pengujian-otomatis)
-9. [Lisensi](#lisensi)
+2. [Arsitektur & Alur Kerja](#arsitektur--alur-kerja)
+3. [Persyaratan Sistem](#persyaratan-sistem)
+4. [Panduan Instalasi](#panduan-instalasi)
+5. [Akun Pengujian Bawaan](#akun-pengujian-bawaan)
+6. [Format Dokumen & Ekstraksi Cerdas](#format-dokumen--ekstraksi-cerdas)
+7. [Pengujian Otomatis](#pengujian-otomatis)
+8. [Lisensi](#lisensi)
 
 ---
 
@@ -60,21 +59,6 @@
 ### 6. Desain Antarmuka Modern & Tanpa Ketergantungan Berat
 - Dibangun dengan **Vanilla CSS** berbasis token warna modern dan responsif.
 - Komponen modal konfirmasi kustom yang bersih dan elegan (menggantikan dialog bawaan browser).
-
----
-
-## Tumpukan Teknologi
-
-| Komponen | Teknologi | Keterangan |
-| :--- | :--- | :--- |
-| **Backend Framework** | [Laravel 12.x](https://laravel.com) | Framework PHP modern berbasis MVC |
-| **Bahasa Pemrograman** | [PHP 8.2+](https://php.net) | Dengan ekstensi `zip`, `gd`/`imagick`, `dom`, `xml` |
-| **Database** | MySQL 8.0+ / MariaDB / SQLite | Relasional dengan migrasi & seeder bawaan |
-| **Pemrosesan Word** | [PHPOffice / PHPWord](https://github.com/PHPOffice/PHPWord) | Ekstraksi dan generasi dokumen `.docx` |
-| **Pemrosesan PDF** | [DomPDF](https://github.com/barryvdh/laravel-dompdf) & [PdfParser](https://github.com/smalot/pdfparser) | Generasi & parsing teks/gambar dokumen `.pdf` |
-| **Template Dokumen** | Microsoft Word (`.docx`) | Standar institusi 3 kolom &bull; [Unduh Langsung](public/templates/Template_Logbook_PKL.docx) |
-| **Frontend** | Blade Templates, Vanilla CSS, Vanilla JS | Performa tinggi tanpa dependensi framework JS eksternal |
-| **Testing** | PHPUnit 11 | 52 skenario pengujian unit & fitur (100% coverage green) |
 
 ---
 

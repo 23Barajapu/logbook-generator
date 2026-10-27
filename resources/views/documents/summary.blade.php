@@ -61,11 +61,16 @@
                             <span>{{ $count }} Hari ({{ round(($count / $totalDays) * 100) }}%)</span>
                         </div>
                         <div style="height: 8px; background: var(--bg-subtle); border-radius: 4px; overflow: hidden;">
-                            <div style="height: 100%; width: {{ ($count / $totalDays) * 100 }}%; background: var(--accent);"></div>
+                            <div class="field-progress-bar" data-width="{{ round(($count / $totalDays) * 100) }}" style="height: 100%; background: var(--accent); width: 0%;"></div>
                         </div>
                     </div>
                 @endforeach
             </div>
+            <script>
+                document.querySelectorAll('.field-progress-bar').forEach(function(el) {
+                    el.style.width = el.getAttribute('data-width') + '%';
+                });
+            </script>
         @endif
     </div>
 

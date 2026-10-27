@@ -18,6 +18,7 @@ class DocumentController extends Controller
 
     private function authorizeInternshipAccess(Internship $internship): void
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         if ($user->isAdmin()) {
@@ -78,7 +79,7 @@ class DocumentController extends Controller
     public function downloadTemplate(): BinaryFileResponse
     {
         $filePath = $this->documentService->generateTemplateDocx();
-        $fileName = 'Template_Logbook_PKL.docx';
+        $fileName = basename($filePath);
 
         return response()->download($filePath, $fileName);
     }

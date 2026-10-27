@@ -671,7 +671,7 @@ class MahasiswaController extends Controller
     public function downloadImportTemplate(): BinaryFileResponse
     {
         $filePath = $this->documentService->generateTemplateDocx();
-        $fileName = 'Template_Logbook_PKL.docx';
+        $fileName = basename($filePath);
 
         return response()->download($filePath, $fileName);
     }

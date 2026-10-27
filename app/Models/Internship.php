@@ -34,8 +34,10 @@ class Internship extends Model
 
     public function getCampusLogoUrlAttribute(): ?string
     {
-        if ($this->campus_logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->campus_logo)) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->url($this->campus_logo);
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        if ($this->campus_logo && $disk->exists($this->campus_logo)) {
+            return $disk->url($this->campus_logo);
         }
 
         return asset('images/logo-polsub.png');
@@ -43,8 +45,10 @@ class Internship extends Model
 
     public function getEffectiveCampusLogoRealPath(): ?string
     {
-        if ($this->campus_logo && \Illuminate\Support\Facades\Storage::disk('public')->exists($this->campus_logo)) {
-            return \Illuminate\Support\Facades\Storage::disk('public')->path($this->campus_logo);
+        /** @var \Illuminate\Filesystem\FilesystemAdapter $disk */
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        if ($this->campus_logo && $disk->exists($this->campus_logo)) {
+            return $disk->path($this->campus_logo);
         }
 
         $defaultPath = public_path('images/logo-polsub.png');

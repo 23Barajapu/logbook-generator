@@ -636,6 +636,22 @@ class DocumentService
      */
     public function generateTemplateDocx(bool $forceRegenerate = false): string
     {
+        $userTemplateName = 'TEMPLATE BUKU AKTIVITAS HARIAN (logbook) 2026.docx';
+        $userTemplatePublic = public_path('templates/' . $userTemplateName);
+
+        // Prioritas Utama: Cek file template resmi yang dipindahkan pengguna di public/templates
+        if (file_exists($userTemplatePublic) && filesize($userTemplatePublic) > 0) {
+            $templatesDir = storage_path('app/templates');
+            if (! is_dir($templatesDir)) {
+                mkdir($templatesDir, 0755, true);
+            }
+            $storageCopy = $templatesDir . '/' . $userTemplateName;
+            if (! file_exists($storageCopy) || filesize($storageCopy) !== filesize($userTemplatePublic)) {
+                @copy($userTemplatePublic, $storageCopy);
+            }
+            return $userTemplatePublic;
+        }
+
         $masterTemplate = resource_path('templates/template-logbook-pkl.docx');
         $templatesDir = storage_path('app/templates');
         if (! is_dir($templatesDir)) {
