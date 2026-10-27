@@ -29,17 +29,17 @@
     </div>
     <div class="stat-card">
         <div class="stat-label">Disetujui Pembimbing</div>
-        <div class="stat-value" style="color: #065f46;">{{ $approvedCount }}</div>
+        <div class="stat-value" style="color: var(--success-text);">{{ $approvedCount }}</div>
         <div class="stat-meta">Persentase: {{ $totalDays > 0 ? round(($approvedCount / $totalDays) * 100, 1) : 0 }}%</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Menunggu Verifikasi</div>
-        <div class="stat-value" style="color: #92400e;">{{ $pendingCount }}</div>
+        <div class="stat-value" style="color: var(--warning-text);">{{ $pendingCount }}</div>
         <div class="stat-meta">Aktivitas dalam antrean</div>
     </div>
     <div class="stat-card">
         <div class="stat-label">Nilai Akhir PKL</div>
-        <div class="stat-value" style="color: var(--accent-blue);">
+        <div class="stat-value" style="color: var(--accent);">
             {{ $internship->evaluation ? $internship->evaluation->final_score : '-' }}
         </div>
         <div class="stat-meta">{{ $internship->evaluation ? 'Skala 100' : 'Belum dievaluasi' }}</div>
@@ -61,7 +61,7 @@
                             <span>{{ $count }} Hari ({{ round(($count / $totalDays) * 100) }}%)</span>
                         </div>
                         <div style="height: 8px; background: var(--bg-subtle); border-radius: 4px; overflow: hidden;">
-                            <div style="height: 100%; width: {{ ($count / $totalDays) * 100 }}%; background: var(--primary);"></div>
+                            <div style="height: 100%; width: {{ ($count / $totalDays) * 100 }}%; background: var(--accent);"></div>
                         </div>
                     </div>
                 @endforeach
@@ -89,7 +89,7 @@
 
 <!-- Laporan Akhir & Hasil Evaluasi -->
 @if($internship->evaluation)
-<div class="card" style="margin-bottom: 24px; border-left: 4px solid #065f46;">
+<div class="card" style="margin-bottom: 24px; border-left: 4px solid var(--success);">
     <div class="card-header">
         <h2 class="card-title">Rincian Penilaian Akhir Akademik</h2>
         <span class="badge badge-approved" style="font-size: 15px; padding: 4px 12px;">Nilai Kumulatif: {{ $internship->evaluation->final_score }}</span>

@@ -54,7 +54,7 @@
                                 <a href="{{ route('admin.supervisors.edit', $spv) }}" class="btn btn-secondary btn-sm">
                                     Edit
                                 </a>
-                                <form action="{{ route('admin.supervisors.destroy', $spv) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data dosen pembimbing ini beserta akunnya?');">
+                                <form action="{{ route('admin.supervisors.destroy', $spv) }}" method="POST" style="display:inline;" data-confirm="Hapus data dosen pembimbing {{ $spv->user->name }} beserta akunnya? Tindakan ini tidak dapat dibatalkan." data-confirm-title="Hapus Pembimbing" data-confirm-btn="Ya, Hapus" data-confirm-variant="danger">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">

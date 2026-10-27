@@ -80,3 +80,36 @@
     </form>
 </div>
 @endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('attachments');
+    if (!input) return;
+
+    input.addEventListener('change', function() {
+        const files = Array.from(input.files);
+        const seen = new Set();
+        const valid = [];
+        let duplicateCount = 0;
+
+        files.forEach(file => {
+            const key = file.name + '___' + file.size;
+            if (seen.has(key)) {
+                duplicateCount++;
+            } else {
+                seen.add(key);
+                valid.push(file);
+            }
+        });
+
+        if (duplicateCount > 0) {
+            const dt = new DataTransfer();
+            valid.forEach(f => dt.items.add(f));
+            input.files = dt.files;
+            showAlertModal(`${duplicateCount} file kembar terdeteksi dan otomatis disaring dari daftar upload.`, 'File Duplikat Disaring', 'info');
+        }
+    });
+});
+</script>
+@endsection

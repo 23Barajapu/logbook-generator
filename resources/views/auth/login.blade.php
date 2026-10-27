@@ -6,8 +6,8 @@
 <div class="auth-page">
     <div class="auth-card">
         <div class="auth-logo">
-            <div class="auth-logo-mark" aria-hidden="true">D</div>
-            <h1 class="auth-title">DailyLog PKL</h1>
+            <div class="auth-logo-mark" aria-hidden="true">L</div>
+            <h1 class="auth-title">Logbook Generator</h1>
             <p class="auth-subtitle">Manajemen Aktivitas, Approval & Generator Logbook</p>
         </div>
 

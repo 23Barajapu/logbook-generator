@@ -6,12 +6,12 @@
 <div class="auth-page" style="padding: 40px 16px;">
     <div class="auth-card auth-card-wide">
         <div class="auth-logo">
-            <div class="auth-logo-mark" aria-hidden="true">D</div>
+            <div class="auth-logo-mark" aria-hidden="true">L</div>
             <h1 class="auth-title">Pendaftaran Mahasiswa</h1>
             <p class="auth-subtitle">Buat akun untuk mencatat logbook dan menyusun laporan PKL</p>
         </div>
 
-        @if ($errors->any())
+        @if (isset($errors) && $errors instanceof \Illuminate\Support\ViewErrorBag && $errors->any())
             <div class="alert alert-danger" role="alert">
                 <strong>Mohon periksa formulir pendaftaran:</strong>
                 <ul style="margin: 6px 0 0 16px; padding: 0;">

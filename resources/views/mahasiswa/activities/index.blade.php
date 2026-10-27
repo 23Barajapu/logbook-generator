@@ -10,17 +10,17 @@
     </div>
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
         @if($internship)
-            <a href="{{ route('mahasiswa.activities.import') }}" class="btn btn-secondary" id="btn-import-docx" title="Import otomatis aktivitas harian dari file Word (.docx)">
-                📥 Import dari DOCX
+            <a href="{{ route('mahasiswa.activities.import') }}" class="btn btn-secondary" id="btn-import-docx" title="Import otomatis aktivitas harian dari file Word (.docx) atau PDF (.pdf)">
+                Import DOCX / PDF
             </a>
             <button type="button" class="btn btn-secondary" onclick="openExportModal()" id="btn-open-export-modal" title="Unduh Logbook mingguan atau keseluruhan">
-                📄 Unduh Logbook (.docx / .pdf)
+                Unduh Logbook (.docx / .pdf)
             </button>
             <a href="{{ route('documents.docx', $internship) }}" class="btn btn-secondary" id="btn-download-docx" style="display: none;">
-                📄 Download DOCX
+                Download DOCX
             </a>
             <a href="{{ route('documents.pdf', $internship) }}" class="btn btn-secondary" id="btn-download-pdf" style="display: none;">
-                📥 Download PDF
+                Download PDF
             </a>
         @endif
         <a href="{{ route('mahasiswa.activities.create') }}" class="btn btn-primary" id="btn-tambah-aktivitas">
@@ -93,11 +93,11 @@
                             @endif
                             @if($act->attachments->count() > 0)
                                 <div style="font-size: 11px; color: var(--accent-blue); margin-top: 4px;">
-                                    &#128206; {{ $act->attachments->count() }} Lampiran Dokumentasi
+                                    {{ $act->attachments->count() }} Lampiran Dokumentasi
                                 </div>
                             @endif
                             @if($act->latestApproval && $act->latestApproval->notes)
-                                <div style="font-size: 12px; color: var(--warning-text); background: var(--warning-bg); padding: 4px 8px; border-radius: var(--radius-sm); margin-top: 6px;">
+                                <div style="font-size: 12px; color: var(--warning-text); background: var(--warning-dim); padding: 4px 8px; border-radius: var(--radius-sm); margin-top: 6px;">
                                     <strong>Catatan Pembimbing:</strong> {{ $act->latestApproval->notes }}
                                 </div>
                             @endif
@@ -123,7 +123,7 @@
                                     <a href="{{ route('mahasiswa.activities.edit', $act) }}" class="btn btn-secondary btn-sm">
                                         Edit
                                     </a>
-                                    <form action="{{ route('mahasiswa.activities.submit', $act) }}" method="POST" style="display:inline;" onsubmit="return confirm('Ajukan aktivitas ini ke pembimbing untuk proses approval?');">
+                                    <form action="{{ route('mahasiswa.activities.submit', $act) }}" method="POST" style="display:inline;" data-confirm="Ajukan aktivitas hari ke-{{ $act->day_number }} ini ke pembimbing untuk proses approval?" data-confirm-title="Ajukan Aktivitas" data-confirm-btn="Ya, Ajukan" data-confirm-variant="primary">
                                         @csrf
                                         <button type="submit" class="btn btn-primary btn-sm">
                                             Ajukan
@@ -132,7 +132,7 @@
                                 @endif
 
                                 @if($act->status === 'Draft')
-                                    <form action="{{ route('mahasiswa.activities.destroy', $act) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus aktivitas draft ini?');">
+                                    <form action="{{ route('mahasiswa.activities.destroy', $act) }}" method="POST" style="display:inline;" data-confirm="Hapus aktivitas draft hari ke-{{ $act->day_number }} ini? Tindakan ini tidak dapat dibatalkan." data-confirm-title="Hapus Aktivitas Draft" data-confirm-btn="Ya, Hapus" data-confirm-variant="danger">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-sm">

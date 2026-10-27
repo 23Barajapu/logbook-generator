@@ -10,7 +10,10 @@
             {{ auth()->user()->name }} &bull; NIP/NIDN: {{ $supervisor?->employee_number ?? '—' }}
         </div>
     </div>
-    <div class="page-actions">
+    <div class="page-actions" style="display: flex; gap: 8px;">
+        <a href="{{ route('documents.template') }}" class="btn btn-secondary" id="btn-download-template" title="Unduh format template logbook PKL (.docx) untuk dibagikan ke mahasiswa">
+            Unduh Template (.docx)
+        </a>
         <a href="{{ route('pembimbing.students') }}" class="btn btn-primary" id="btn-mahasiswa-bimbingan">
             Mahasiswa Bimbingan
         </a>
@@ -19,19 +22,25 @@
 
 <div class="grid-stats" role="region" aria-label="Ringkasan statistik pembimbing">
     <div class="stat-card">
-        <div class="stat-icon" aria-hidden="true">👥</div>
+        <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        </div>
         <div class="stat-label">Mahasiswa Bimbingan</div>
         <div class="stat-value">{{ $stats['total_students'] }}</div>
         <div class="stat-meta">Total mahasiswa aktif</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background:var(--warning-dim);" aria-hidden="true">⏳</div>
+        <div class="stat-icon" style="background:var(--warning-dim);color:var(--warning-text);" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        </div>
         <div class="stat-label">Menunggu Approval</div>
         <div class="stat-value" style="color:var(--warning-text);">{{ $stats['pending_approval'] }}</div>
         <div class="stat-meta">Aktivitas butuh verifikasi</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background:var(--success-dim);" aria-hidden="true">✓</div>
+        <div class="stat-icon" style="background:var(--success-dim);color:var(--success-text);" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
         <div class="stat-label">Sudah Dinilai</div>
         <div class="stat-value" style="color:var(--success-text);">{{ $stats['total_evaluated'] }}</div>
         <div class="stat-meta">Evaluasi akhir selesai</div>

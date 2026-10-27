@@ -77,10 +77,10 @@
     </div>
 
     <!-- Panel Kalkulasi Nilai Otomatis -->
-    <div class="card" style="border-top: 4px solid #065f46;">
+    <div class="card" style="border-top: 4px solid var(--accent);">
         <h2 class="card-title" style="margin-bottom: 12px;">Estimasi Nilai Akhir</h2>
         <div style="text-align: center; padding: 16px 0;">
-            <div id="finalScoreDisplay" style="font-size: 48px; font-weight: 800; color: #065f46;">
+            <div id="finalScoreDisplay" style="font-size: 48px; font-weight: 800; color: var(--success-text);">
                 {{ $evaluation ? $evaluation->final_score : '0.00' }}
             </div>
             <div style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Skala Akhir (100%)</div>

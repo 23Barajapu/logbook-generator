@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
@@ -16,7 +17,7 @@ class AuthTest extends TestCase
         $response = $this->get('/login');
 
         $response->assertStatus(200);
-        $response->assertSee('DailyLog PKL');
+        $response->assertSee('Logbook Generator');
     }
 
     public function test_mahasiswa_can_authenticate_and_redirect_to_dashboard(): void
@@ -217,7 +218,7 @@ class AuthTest extends TestCase
             'batch_year' => 2022,
         ]);
 
-        auth()->logout();
+        Auth::logout();
 
         // Second registration with same NIM
         $response = $this->post('/register', [

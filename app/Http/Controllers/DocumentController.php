@@ -75,6 +75,14 @@ class DocumentController extends Controller
         return response()->download($filePath, $fileName)->deleteFileAfterSend(true);
     }
 
+    public function downloadTemplate(): BinaryFileResponse
+    {
+        $filePath = $this->documentService->generateTemplateDocx();
+        $fileName = 'Template_Logbook_PKL.docx';
+
+        return response()->download($filePath, $fileName);
+    }
+
     public function summary(Internship $internship): View
     {
         $this->authorizeInternshipAccess($internship);

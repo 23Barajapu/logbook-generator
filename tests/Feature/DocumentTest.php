@@ -179,5 +179,57 @@ class DocumentTest extends TestCase
         $responsePdf->assertStatus(200);
         $responsePdf->assertHeader('content-type', 'application/pdf');
     }
+
+    public function test_can_download_report_template_as_authenticated_user(): void
+    {
+        $setup = $this->createInternshipWithActivities();
+
+        $response = $this->actingAs($setup['user'])
+            ->get(route('documents.template'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    }
+
+    public function test_student_can_download_import_template_from_activities_import(): void
+    {
+        $setup = $this->createInternshipWithActivities();
+
+        $response = $this->actingAs($setup['user'])
+            ->get(route('mahasiswa.activities.import.template'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    }
+
+    public function test_public_user_can_download_template_without_login(): void
+    {
+        $response = $this->get(route('template.public'));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+    }
+
+    public function test_generated_template_is_compatible_with_docx_import_service(): void
+    {
+        $setup = $this->createInternshipWithActivities();
+        $docService = app(\App\Services\DocumentService::class);
+        $templatePath = $docService->generateTemplateDocx(true);
+
+        $this->assertFileExists($templatePath);
+
+        $importService = app(\App\Services\DocxImportService::class);
+        $extracted = $importService->parseSingleDocx($templatePath, 'Template_Logbook_PKL.docx', 'temp_test', $setup['internship']->id);
+
+        $this->assertNotEmpty($extracted);
+        $this->assertGreaterThanOrEqual(2, count($extracted));
+
+        // Cek hari 1
+        $day1 = collect($extracted)->firstWhere('day_number', 1);
+        $this->assertNotNull($day1);
+        $this->assertNotEmpty($day1['work_field']);
+        $this->assertNotEmpty($day1['activities']);
+        $this->assertNotEmpty($day1['tools_used']);
+    }
 }
 

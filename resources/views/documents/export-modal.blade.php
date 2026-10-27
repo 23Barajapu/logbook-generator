@@ -17,10 +17,10 @@
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
                     <a href="{{ route('documents.docx', $internship) }}" class="btn btn-primary" id="btn-export-all-docx">
-                        📄 Unduh DOCX (.docx)
+                        Unduh DOCX (.docx)
                     </a>
                     <a href="{{ route('documents.pdf', $internship) }}" class="btn btn-secondary" id="btn-export-all-pdf">
-                        📥 Unduh PDF (.pdf)
+                        Unduh PDF (.pdf)
                     </a>
                 </div>
             </div>
@@ -49,10 +49,10 @@
                         </select>
                         <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
                             <a id="btn-export-week-docx" href="#" class="btn btn-primary">
-                                📄 Unduh DOCX Minggu Ini
+                                Unduh DOCX Minggu Ini
                             </a>
                             <a id="btn-export-week-pdf" href="#" class="btn btn-secondary">
-                                📥 Unduh PDF Minggu Ini
+                                Unduh PDF Minggu Ini
                             </a>
                         </div>
                     </div>
@@ -84,11 +84,27 @@
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 4px;">
                     <button type="button" class="btn btn-secondary" onclick="downloadCustomDate('docx')">
-                        📄 Unduh DOCX
+                        Unduh DOCX
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="downloadCustomDate('pdf')">
-                        📥 Unduh PDF
+                        Unduh PDF
                     </button>
+                </div>
+            </div>
+
+            {{-- Pilihan 4: Unduh Template Laporan Kosong --}}
+            <div class="export-option-card">
+                <div class="export-option-title">
+                    <span>4. Template Laporan PKL (.docx)</span>
+                    <span class="badge badge-info">Template</span>
+                </div>
+                <div class="export-option-desc">
+                    Unduh file template dokumen Microsoft Word resmi berstandar institusional untuk diisi secara offline atau dibagikan ke pengguna / mahasiswa lain.
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <a href="{{ route('documents.template') }}" class="btn btn-secondary" id="btn-export-template-docx">
+                        Unduh Template (.docx)
+                    </a>
                 </div>
             </div>
         </div>
@@ -139,7 +155,7 @@ function downloadCustomDate(format) {
     const end = document.getElementById('custom-end-date').value;
     
     if (!start || !end) {
-        alert('Silakan pilih tanggal awal dan tanggal akhir.');
+        showAlertModal('Silakan pilih tanggal awal dan tanggal akhir terlebih dahulu.', 'Rentang Tanggal Belum Lengkap', 'warning');
         return;
     }
     

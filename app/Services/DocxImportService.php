@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Activity;
 use App\Models\ActivityAttachment;
+use App\Models\ImportedDocument;
 use DOMDocument;
 use DOMXPath;
 use Illuminate\Http\UploadedFile;
@@ -35,7 +36,7 @@ class DocxImportService
      * Parse multiple DOCX files and extract activity records with images.
      *
      * @param  array<UploadedFile|string>  $files
-     * @return array{token: string, activities: array, stats: array}
+     * @return array{token: string, activities: array, processed_files: array, stats: array}
      */
     public function parseDocxFiles(array $files, int $internshipId): array
     {
@@ -46,12 +47,58 @@ class DocxImportService
         $extractedActivities = [];
         $totalImages = 0;
         $conflictCount = 0;
+        $seenHashesInBatch = [];
+        $skippedDuplicates = [];
+        $validFileCount = 0;
+        $processedFiles = [];
+
+        // Ambil riwayat hash file yang sudah pernah diimpor untuk penugasan PKL ini
+        $historicalHashes = ImportedDocument::where('internship_id', $internshipId)
+            ->pluck('file_hash')
+            ->toArray();
 
         foreach ($files as $file) {
             $filePath = $file instanceof UploadedFile ? $file->getRealPath() : (string) $file;
             $sourceFileName = $file instanceof UploadedFile ? $file->getClientOriginalName() : basename($filePath);
+            $fileSize = $file instanceof UploadedFile ? $file->getSize() : (file_exists($filePath) ? filesize($filePath) : 0);
 
-            $parsed = $this->parseSingleDocx($filePath, $sourceFileName, $tempRelativeDir, $internshipId);
+            $fileHash = file_exists($filePath) ? hash_file('sha256', $filePath) : null;
+
+            if ($fileHash) {
+                // 1. Validasi duplikat dalam satu sesi unggah (intra-batch)
+                if (isset($seenHashesInBatch[$fileHash])) {
+                    $skippedDuplicates[] = [
+                        'file_name' => $sourceFileName,
+                        'reason' => 'Duplikat dalam satu sesi upload (identik dengan ' . $seenHashesInBatch[$fileHash] . ')',
+                    ];
+                    continue;
+                }
+
+                // 2. Validasi duplikat terhadap riwayat impor sebelumnya (historical)
+                if (in_array($fileHash, $historicalHashes, true)) {
+                    $skippedDuplicates[] = [
+                        'file_name' => $sourceFileName,
+                        'reason' => 'Dokumen ini sudah pernah diimpor sebelumnya untuk periode PKL ini',
+                    ];
+                    continue;
+                }
+
+                $seenHashesInBatch[$fileHash] = $sourceFileName;
+            }
+
+            $validFileCount++;
+            $processedFiles[] = [
+                'file_name' => $sourceFileName,
+                'file_hash' => $fileHash,
+                'file_size' => $fileSize,
+            ];
+
+            $ext = strtolower(pathinfo($sourceFileName, PATHINFO_EXTENSION));
+            if ($ext === 'pdf') {
+                $parsed = $this->parseSinglePdf($filePath, $sourceFileName, $tempRelativeDir, $internshipId);
+            } else {
+                $parsed = $this->parseSingleDocx($filePath, $sourceFileName, $tempRelativeDir, $internshipId);
+            }
 
             foreach ($parsed as $item) {
                 if ($item['is_conflict']) {
@@ -68,11 +115,15 @@ class DocxImportService
         return [
             'token' => $importToken,
             'activities' => $extractedActivities,
+            'processed_files' => $processedFiles,
             'stats' => [
                 'total_extracted' => count($extractedActivities),
                 'conflict_count' => $conflictCount,
                 'image_count' => $totalImages,
-                'files_count' => count($files),
+                'files_count' => $validFileCount,
+                'total_files_uploaded' => count($files),
+                'duplicate_count' => count($skippedDuplicates),
+                'skipped_duplicates' => $skippedDuplicates,
             ],
         ];
     }
@@ -270,6 +321,230 @@ class DocxImportService
     }
 
     /**
+     * Parse single PDF file and extract activities and embedded images.
+     */
+    public function parseSinglePdf(string $filePath, string $sourceFileName, string $tempRelativeDir, int $internshipId): array
+    {
+        try {
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile($filePath);
+        } catch (\Throwable $e) {
+            Log::warning("Gagal membuka file PDF: {$sourceFileName} - " . $e->getMessage());
+            return [];
+        }
+
+        $activities = [];
+        $pages = $pdf->getPages();
+
+        foreach ($pages as $pIdx => $page) {
+            $pageText = $page->getText();
+            if (empty(trim($pageText))) {
+                continue;
+            }
+
+            // Ekstrak gambar tersemat pada halaman ini
+            $pageImages = [];
+            try {
+                $xobjects = $page->getXObjects();
+                foreach ($xobjects as $xId => $xObj) {
+                    if ($xObj instanceof \Smalot\PdfParser\XObject\Image) {
+                        $details = $xObj->getDetails();
+                        $width = (int) ($details['Width'] ?? 0);
+                        $height = (int) ($details['Height'] ?? 0);
+
+                        // Filter cerdas: abaikan logo/ikon kecil (< 100px)
+                        if ($width > 0 && $height > 0 && ($width < 100 || $height < 100)) {
+                            continue;
+                        }
+
+                        $rawContent = $xObj->getContent();
+                        if (strlen($rawContent) < 1000) {
+                            continue;
+                        }
+
+                        $imgData = null;
+                        $ext = 'jpg';
+                        $filter = $details['Filter'] ?? '';
+
+                        if ($filter === 'DCTDecode' || str_starts_with($rawContent, "\xFF\xD8\xFF")) {
+                            $imgData = $rawContent;
+                            $ext = 'jpg';
+                        } else {
+                            $gd = @imagecreatefromstring($rawContent);
+                            if ($gd !== false) {
+                                ob_start();
+                                imagepng($gd);
+                                $imgData = ob_get_clean();
+                                $ext = 'png';
+                            }
+                        }
+
+                        if ($imgData !== null) {
+                            $imgHash = hash('sha256', $imgData);
+                            $imageFilename = 'img_pdf_' . substr($imgHash, 0, 16) . '.' . $ext;
+                            $tempImagePath = $tempRelativeDir . '/' . $imageFilename;
+
+                            if (! Storage::disk('public')->exists($tempImagePath)) {
+                                Storage::disk('public')->put($tempImagePath, $imgData);
+                            }
+
+                            $pageImages[] = [
+                                'file_name' => $imageFilename,
+                                'temp_path' => $tempImagePath,
+                                'preview_url' => asset('storage/' . $tempImagePath),
+                                'file_type' => $ext,
+                                'file_size' => strlen($imgData),
+                            ];
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning("Gagal mengekstrak gambar dari halaman PDF {$pIdx}: " . $e->getMessage());
+            }
+
+            // Deteksi penanda Hari Ke-X
+            if (preg_match_all('/Hari\s*Ke[-–—\s]*(\d+)/i', $pageText, $dayMatches, PREG_OFFSET_CAPTURE)) {
+                $matchesCount = count($dayMatches[0]);
+
+                for ($i = 0; $i < $matchesCount; $i++) {
+                    $dayNum = (int) $dayMatches[1][$i][0];
+                    $startOffset = $dayMatches[0][$i][1];
+                    $endOffset = ($i + 1 < $matchesCount) ? $dayMatches[0][$i + 1][1] : strlen($pageText);
+                    $block = substr($pageText, $startOffset, $endOffset - $startOffset);
+
+                    // Parse tanggal
+                    $parsedDate = $this->parseIndonesianDate($block) ?? now()->toDateString();
+
+                    // Parse Tools, Masalah, Solusi
+                    $toolsData = $this->parseToolsColumn($block);
+
+                    // Parse Bidang Kerja & Deskripsi Aktivitas
+                    $body = preg_replace('/^.*?Hari\s*Ke[^\n]*\n?/im', '', $block);
+                    $body = preg_replace('/(Bidang\s*Pekerjaan|Kegiatan\s*(&|dan)\s*Bukti|Tools\s*yang\s*digunakan[^\n]*|Masalah\s*dan\s*Solusi|Solusi)/im', '', $body);
+                    $body = preg_replace('/\bTools\s*:.*$/is', '', $body);
+
+                    $lines = array_values(array_filter(array_map('trim', explode("\n", $body))));
+                    $workField = 'PKL';
+                    if (! empty($lines)) {
+                        if (count($lines) > 1 && strlen($lines[0]) <= 50 && ! preg_match('/^\d+[\.\)]/i', $lines[0])) {
+                            $workField = array_shift($lines);
+                            // Jika baris berikutnya juga pendek dan kelanjutan kata bidang (misal: 'Mobile' + 'Development' atau 'DevOps' + 'Support')
+                            if (! empty($lines) && strlen($lines[0]) <= 30 && ! preg_match('/[\.\,\!\?]$/', $lines[0]) && ! preg_match('/^(membuat|mengerjakan|melakukan|setup|install|perbaikan|testing|deployment|analisis)/i', $lines[0])) {
+                                $workField .= ' ' . array_shift($lines);
+                            }
+                        }
+                        $activitiesText = implode("\n", $lines);
+                    } else {
+                        $activitiesText = 'Aktivitas PKL Hari Ke-' . $dayNum;
+                    }
+
+                    // Pengecekan konflik nomor hari di database
+                    $conflict = Activity::where('internship_id', $internshipId)
+                        ->where('day_number', $dayNum)
+                        ->first();
+
+                    $activities[] = [
+                        'day_number' => $dayNum,
+                        'activity_date' => $parsedDate,
+                        'work_field' => $workField,
+                        'activities' => $activitiesText,
+                        'tools_used' => $toolsData['tools_used'],
+                        'problems' => $toolsData['problems'],
+                        'solutions' => $toolsData['solutions'],
+                        'is_conflict' => (bool) $conflict,
+                        'conflict_action' => $conflict ? 'overwrite' : 'skip',
+                        'existing_activity' => $conflict ? [
+                            'work_field' => $conflict->work_field,
+                            'activities' => $conflict->activities,
+                            'status' => $conflict->status,
+                        ] : null,
+                        'images' => $pageImages,
+                        'source_file' => $sourceFileName,
+                    ];
+                }
+            }
+        }
+
+        // Jika belum ada aktivitas terdeteksi per halaman, coba parsing dari teks gabungan seluruh dokumen
+        if (empty($activities)) {
+            $fullText = $pdf->getText();
+            if (preg_match_all('/Hari\s*Ke[-–—\s]*(\d+)/i', $fullText, $dayMatches, PREG_OFFSET_CAPTURE)) {
+                $matchesCount = count($dayMatches[0]);
+                for ($i = 0; $i < $matchesCount; $i++) {
+                    $dayNum = (int) $dayMatches[1][$i][0];
+                    $startOffset = $dayMatches[0][$i][1];
+                    $endOffset = ($i + 1 < $matchesCount) ? $dayMatches[0][$i + 1][1] : strlen($fullText);
+                    $block = substr($fullText, $startOffset, $endOffset - $startOffset);
+
+                    $parsedDate = $this->parseIndonesianDate($block) ?? now()->toDateString();
+                    $toolsData = $this->parseToolsColumn($block);
+
+                    $body = preg_replace('/^.*?Hari\s*Ke[^\n]*\n?/im', '', $block);
+                    $body = preg_replace('/(Bidang\s*Pekerjaan|Kegiatan\s*(&|dan)\s*Bukti|Tools\s*yang\s*digunakan[^\n]*|Masalah\s*dan\s*Solusi|Solusi)/im', '', $body);
+                    $body = preg_replace('/\bTools\s*:.*$/is', '', $body);
+
+                    $lines = array_values(array_filter(array_map('trim', explode("\n", $body))));
+                    $workField = 'PKL';
+                    if (! empty($lines)) {
+                        if (count($lines) > 1 && strlen($lines[0]) <= 50 && ! preg_match('/^\d+[\.\)]/i', $lines[0])) {
+                            $workField = array_shift($lines);
+                            // Jika baris berikutnya juga pendek dan kelanjutan kata bidang (misal: 'Mobile' + 'Development' atau 'DevOps' + 'Support')
+                            if (! empty($lines) && strlen($lines[0]) <= 30 && ! preg_match('/[\.\,\!\?]$/', $lines[0]) && ! preg_match('/^(membuat|mengerjakan|melakukan|setup|install|perbaikan|testing|deployment|analisis)/i', $lines[0])) {
+                                $workField .= ' ' . array_shift($lines);
+                            }
+                        }
+                        $activitiesText = implode("\n", $lines);
+                    } else {
+                        $activitiesText = 'Aktivitas PKL Hari Ke-' . $dayNum;
+                    }
+
+                    $conflict = Activity::where('internship_id', $internshipId)
+                        ->where('day_number', $dayNum)
+                        ->first();
+
+                    $activities[] = [
+                        'day_number' => $dayNum,
+                        'activity_date' => $parsedDate,
+                        'work_field' => $workField,
+                        'activities' => $activitiesText,
+                        'tools_used' => $toolsData['tools_used'],
+                        'problems' => $toolsData['problems'],
+                        'solutions' => $toolsData['solutions'],
+                        'is_conflict' => (bool) $conflict,
+                        'conflict_action' => $conflict ? 'overwrite' : 'skip',
+                        'existing_activity' => $conflict ? [
+                            'work_field' => $conflict->work_field,
+                            'activities' => $conflict->activities,
+                            'status' => $conflict->status,
+                        ] : null,
+                        'images' => [],
+                        'source_file' => $sourceFileName,
+                    ];
+                }
+            }
+        }
+
+        // Normalisasi work_field umum jika ada
+        $commonWf = null;
+        foreach ($activities as $act) {
+            if (! empty($act['work_field']) && $act['work_field'] !== 'PKL') {
+                $commonWf = $act['work_field'];
+                break;
+            }
+        }
+        if ($commonWf) {
+            foreach ($activities as &$act) {
+                if (empty($act['work_field']) || $act['work_field'] === 'PKL') {
+                    $act['work_field'] = $commonWf;
+                }
+            }
+            unset($act);
+        }
+
+        return $activities;
+    }
+
+    /**
      * Parse Indonesian formatted date into Y-m-d.
      */
     public function parseIndonesianDate(string $text): ?string
@@ -344,7 +619,7 @@ class DocxImportService
      * @param  array<array>  $activities
      * @return array{saved: int, updated: int, skipped: int}
      */
-    public function saveImportedActivities(int $internshipId, array $activities, string $importToken): array
+    public function saveImportedActivities(int $internshipId, array $activities, string $importToken, array $processedFiles = []): array
     {
         $stats = ['saved' => 0, 'updated' => 0, 'skipped' => 0];
 
@@ -404,6 +679,20 @@ class DocxImportService
                     foreach ($item['images'] as $img) {
                         $tempPath = $img['temp_path'] ?? null;
                         if ($tempPath && Storage::disk('public')->exists($tempPath)) {
+                            $fullTempPath = Storage::disk('public')->path($tempPath);
+                            $imgHash = file_exists($fullTempPath) ? hash_file('sha256', $fullTempPath) : null;
+
+                            // Lewati jika lampiran gambar dengan hash konten yang sama sudah ada pada aktivitas ini
+                            if ($imgHash) {
+                                $existingAtt = ActivityAttachment::where('activity_id', $activity->id)
+                                    ->where('file_hash', $imgHash)
+                                    ->first();
+                                if ($existingAtt) {
+                                    Storage::disk('public')->delete($tempPath);
+                                    continue;
+                                }
+                            }
+
                             $permanentFilename = basename($tempPath);
                             $permanentPath = $targetDir . '/' . $permanentFilename;
 
@@ -416,8 +705,28 @@ class DocxImportService
                                 'file_path' => $permanentPath,
                                 'file_type' => $img['file_type'] ?? 'png',
                                 'file_size' => $img['file_size'] ?? Storage::disk('public')->size($permanentPath),
+                                'file_hash' => $imgHash,
                             ]);
                         }
+                    }
+                }
+            }
+
+            // Catat dokumen DOCX yang berhasil diimpor agar tidak terduplikasi di masa mendatang
+            if (! empty($processedFiles) && is_array($processedFiles)) {
+                foreach ($processedFiles as $pf) {
+                    if (! empty($pf['file_hash'])) {
+                        ImportedDocument::firstOrCreate(
+                            [
+                                'internship_id' => $internshipId,
+                                'file_hash' => $pf['file_hash'],
+                            ],
+                            [
+                                'file_name' => $pf['file_name'],
+                                'file_size' => $pf['file_size'] ?? 0,
+                                'activities_count' => $stats['saved'] + $stats['updated'],
+                            ]
+                        );
                     }
                 }
             }

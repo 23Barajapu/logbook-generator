@@ -1,4 +1,4 @@
-# DailyLog PKL - Domain Glossary
+# Logbook Generator - Domain Glossary
 
 Kamus istilah domain untuk sistem pengelolaan dan generator logbook Praktik Kerja Lapangan (PKL) / Magang Akademik.
 

@@ -13,12 +13,14 @@ Route::get('/login', [AuthController::class, 'showLogin']);
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+Route::get('/template-logbook', [DocumentController::class, 'downloadTemplate'])->name('template.public');
 
 // Authenticated Routes
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     // Document Generation Routes (Shared with role authorization inside controller)
+    Route::get('/documents/template', [DocumentController::class, 'downloadTemplate'])->name('documents.template');
     Route::get('/documents/{internship}/pdf', [DocumentController::class, 'downloadPdf'])->name('documents.pdf');
     Route::get('/documents/{internship}/docx', [DocumentController::class, 'downloadDocx'])->name('documents.docx');
     Route::get('/documents/{internship}/summary', [DocumentController::class, 'summary'])->name('documents.summary');
@@ -37,6 +39,7 @@ Route::middleware('auth')->group(function () {
 
         // Import Activities from DOCX
         Route::get('/activities-import', [MahasiswaController::class, 'showImportForm'])->name('activities.import');
+        Route::get('/activities-import/template', [MahasiswaController::class, 'downloadImportTemplate'])->name('activities.import.template');
         Route::post('/activities-import', [MahasiswaController::class, 'processImport'])->name('activities.import.process');
         Route::get('/activities-import/preview', [MahasiswaController::class, 'previewImport'])->name('activities.import.preview');
         Route::post('/activities-import/confirm', [MahasiswaController::class, 'confirmImport'])->name('activities.import.confirm');

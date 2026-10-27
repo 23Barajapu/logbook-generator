@@ -14,7 +14,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class MahasiswaController extends Controller
 {
@@ -158,14 +160,25 @@ class MahasiswaController extends Controller
                 'activity_date' => $validated['activity_date'],
                 'work_field' => $validated['work_field'],
                 'activities' => $validated['activities'],
-                'tools_used' => $validated['tools_used'],
-                'problems' => $validated['problems'],
-                'solutions' => $validated['solutions'],
+                'tools_used' => $validated['tools_used'] ?? null,
+                'problems' => $validated['problems'] ?? null,
+                'solutions' => $validated['solutions'] ?? null,
                 'status' => $status,
             ]);
 
+            $duplicateAttachmentsCount = 0;
             if ($request->hasFile('attachments')) {
+                $seenAttachmentHashes = [];
                 foreach ($request->file('attachments') as $file) {
+                    $fileHash = hash_file('sha256', $file->getRealPath());
+
+                    // Lewati file duplikat dalam satu sesi unggah
+                    if (in_array($fileHash, $seenAttachmentHashes, true)) {
+                        $duplicateAttachmentsCount++;
+                        continue;
+                    }
+                    $seenAttachmentHashes[] = $fileHash;
+
                     $originalName = $file->getClientOriginalName();
                     $path = $file->store('attachments/' . $activity->id, 'public');
 
@@ -175,6 +188,7 @@ class MahasiswaController extends Controller
                         'file_path' => $path,
                         'file_type' => $file->getClientOriginalExtension(),
                         'file_size' => $file->getSize(),
+                        'file_hash' => $fileHash,
                     ]);
                 }
             }
@@ -184,6 +198,10 @@ class MahasiswaController extends Controller
             $msg = $status === 'Menunggu Approval'
                 ? 'Aktivitas berhasil disimpan dan diajukan ke pembimbing.'
                 : 'Aktivitas berhasil disimpan sebagai draft.';
+
+            if ($duplicateAttachmentsCount > 0) {
+                $msg .= " ({$duplicateAttachmentsCount} file lampiran duplikat otomatis dilewati).";
+            }
 
             return redirect()->route('mahasiswa.activities')->with('success', $msg);
         } catch (\Exception $e) {
@@ -264,9 +282,9 @@ class MahasiswaController extends Controller
                 'activity_date' => $validated['activity_date'],
                 'work_field' => $validated['work_field'],
                 'activities' => $validated['activities'],
-                'tools_used' => $validated['tools_used'],
-                'problems' => $validated['problems'],
-                'solutions' => $validated['solutions'],
+                'tools_used' => $validated['tools_used'] ?? null,
+                'problems' => $validated['problems'] ?? null,
+                'solutions' => $validated['solutions'] ?? null,
                 'status' => $status,
             ]);
 
@@ -283,8 +301,24 @@ class MahasiswaController extends Controller
             }
 
             // Tambah lampiran baru
+            $duplicateAttachmentsCount = 0;
             if ($request->hasFile('attachments')) {
+                $existingHashes = ActivityAttachment::where('activity_id', $activity->id)
+                    ->whereNotNull('file_hash')
+                    ->pluck('file_hash')
+                    ->toArray();
+                $seenAttachmentHashes = [];
+
                 foreach ($request->file('attachments') as $file) {
+                    $fileHash = hash_file('sha256', $file->getRealPath());
+
+                    // Lewati jika file duplikat dalam batch ini atau sudah pernah dilampirkan pada aktivitas ini
+                    if (in_array($fileHash, $seenAttachmentHashes, true) || in_array($fileHash, $existingHashes, true)) {
+                        $duplicateAttachmentsCount++;
+                        continue;
+                    }
+                    $seenAttachmentHashes[] = $fileHash;
+
                     $originalName = $file->getClientOriginalName();
                     $path = $file->store('attachments/' . $activity->id, 'public');
 
@@ -294,14 +328,20 @@ class MahasiswaController extends Controller
                         'file_path' => $path,
                         'file_type' => $file->getClientOriginalExtension(),
                         'file_size' => $file->getSize(),
+                        'file_hash' => $fileHash,
                     ]);
                 }
             }
 
             DB::commit();
 
+            $successMsg = 'Aktivitas berhasil diperbarui.';
+            if ($duplicateAttachmentsCount > 0) {
+                $successMsg .= " ({$duplicateAttachmentsCount} file lampiran duplikat otomatis dilewati).";
+            }
+
             return redirect()->route('mahasiswa.activities.show', $activity)
-                ->with('success', 'Aktivitas berhasil diperbarui.');
+                ->with('success', $successMsg);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -478,11 +518,11 @@ class MahasiswaController extends Controller
 
         $request->validate([
             'files' => ['required', 'array', 'min:1', 'max:10'],
-            'files.*' => ['required', 'file', 'mimes:docx', 'max:25600'],
+            'files.*' => ['required', 'file', 'mimes:docx,pdf', 'max:25600'],
         ], [
-            'files.required' => 'Pilih setidaknya satu file DOCX untuk diunggah.',
-            'files.max' => 'Maksimal mengunggah 10 file DOCX sekaligus.',
-            'files.*.mimes' => 'Format file wajib berupa dokumen Microsoft Word (.docx).',
+            'files.required' => 'Pilih setidaknya satu file DOCX atau PDF untuk diunggah.',
+            'files.max' => 'Maksimal mengunggah 10 file sekaligus.',
+            'files.*.mimes' => 'Format file wajib berupa dokumen Microsoft Word (.docx) atau PDF (.pdf).',
             'files.*.max' => 'Ukuran setiap file maksimal 25 MB.',
         ]);
 
@@ -490,6 +530,14 @@ class MahasiswaController extends Controller
 
         if (empty($result['activities'])) {
             $this->docxImportService->cancelImport($result['token']);
+
+            if (! empty($result['stats']['skipped_duplicates'])) {
+                $dupDetails = collect($result['stats']['skipped_duplicates'])
+                    ->map(fn ($d) => "{$d['file_name']} ({$d['reason']})")
+                    ->implode(', ');
+
+                return back()->with('error', 'Semua file yang diunggah dilewati karena terdeteksi duplikat: ' . $dupDetails . '.');
+            }
 
             return back()->with('error', 'Tidak ada data aktivitas logbook yang dapat diekstrak dari file yang diunggah. Pastikan file menggunakan format tabel logbook PKL (terdapat penanda Hari Ke-X).');
         }
@@ -543,13 +591,52 @@ class MahasiswaController extends Controller
             'activities.*.images.*.temp_path' => ['nullable', 'string'],
             'activities.*.images.*.file_type' => ['nullable', 'string'],
             'activities.*.images.*.file_size' => ['nullable', 'numeric'],
+            'new_activity_images' => ['nullable', 'array'],
+            'new_activity_images.*' => ['nullable', 'array'],
+            'new_activity_images.*.*' => ['nullable', 'file', 'image', 'max:10240'],
         ]);
 
         try {
+            $processedFiles = session('pending_docx_import.processed_files', []);
+            $activitiesData = $validated['activities'];
+
+            // Dukungan penambahan gambar dokumentasi langsung dari kartu pratinjau
+            $newImagesInput = $request->file('new_activity_images');
+            if (! empty($newImagesInput) && is_array($newImagesInput)) {
+                $tempDir = 'temp_imports/' . $validated['token'];
+                Storage::disk('public')->makeDirectory($tempDir);
+
+                foreach ($newImagesInput as $actIdx => $newFiles) {
+                    if (isset($activitiesData[$actIdx]) && is_array($newFiles)) {
+                        if (! isset($activitiesData[$actIdx]['images']) || ! is_array($activitiesData[$actIdx]['images'])) {
+                            $activitiesData[$actIdx]['images'] = [];
+                        }
+
+                        foreach ($newFiles as $newFile) {
+                            if ($newFile instanceof \Illuminate\Http\UploadedFile && $newFile->isValid()) {
+                                $savedExt = $newFile->getClientOriginalExtension() ?: 'png';
+                                $savedName = 'upload_' . Str::random(12) . '.' . $savedExt;
+                                $savedPath = $tempDir . '/' . $savedName;
+                                Storage::disk('public')->put($savedPath, file_get_contents($newFile->getRealPath()));
+
+                                $activitiesData[$actIdx]['images'][] = [
+                                    'file_name' => $newFile->getClientOriginalName(),
+                                    'temp_path' => $savedPath,
+                                    'preview_url' => asset('storage/' . $savedPath),
+                                    'file_type' => $savedExt,
+                                    'file_size' => $newFile->getSize(),
+                                ];
+                            }
+                        }
+                    }
+                }
+            }
+
             $stats = $this->docxImportService->saveImportedActivities(
                 $internship->id,
-                $validated['activities'],
-                $validated['token']
+                $activitiesData,
+                $validated['token'],
+                $processedFiles
             );
 
             session()->forget('pending_docx_import');
@@ -579,5 +666,13 @@ class MahasiswaController extends Controller
         session()->forget('pending_docx_import');
 
         return redirect()->route('mahasiswa.activities')->with('info', 'Proses impor DOCX telah dibatalkan.');
+    }
+
+    public function downloadImportTemplate(): BinaryFileResponse
+    {
+        $filePath = $this->documentService->generateTemplateDocx();
+        $fileName = 'Template_Logbook_PKL.docx';
+
+        return response()->download($filePath, $fileName);
     }
 }

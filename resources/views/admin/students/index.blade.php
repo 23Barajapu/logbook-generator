@@ -53,7 +53,7 @@
                                 <a href="{{ route('admin.students.edit', $st) }}" class="btn btn-secondary btn-sm">
                                     Edit
                                 </a>
-                                <form action="{{ route('admin.students.destroy', $st) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus data mahasiswa ini beserta akun loginnya?');">
+                                <form action="{{ route('admin.students.destroy', $st) }}" method="POST" style="display:inline;" data-confirm="Hapus data mahasiswa {{ $st->user->name }} beserta akun loginnya? Tindakan ini tidak dapat dibatalkan." data-confirm-title="Hapus Mahasiswa" data-confirm-btn="Ya, Hapus" data-confirm-variant="danger">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">

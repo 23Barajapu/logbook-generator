@@ -16,6 +16,7 @@ class ActivityAttachment extends Model
         'file_path',
         'file_type',
         'file_size',
+        'file_hash',
     ];
 
     public function activity(): BelongsTo

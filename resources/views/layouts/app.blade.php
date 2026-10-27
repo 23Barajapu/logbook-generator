@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'DailyLog PKL') — Sistem Logbook PKL</title>
+    <title>@yield('title', 'Logbook Generator') — Sistem Logbook PKL</title>
     <meta name="description" content="Platform manajemen aktivitas harian, approval logbook, dan generator dokumen PKL.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,9 +21,9 @@
     {{-- Sidebar --}}
     <aside class="sidebar" id="sidebar" aria-label="Navigasi Utama">
         <a href="{{ url('/') }}" class="sidebar-brand">
-            <div class="sidebar-brand-mark" aria-hidden="true">D</div>
+            <div class="sidebar-brand-mark" aria-hidden="true">L</div>
             <div>
-                <div class="sidebar-brand-name">DailyLog PKL</div>
+                <div class="sidebar-brand-name">Logbook Generator</div>
                 <div class="sidebar-brand-role">{{ strtoupper(auth()->user()->role) }}</div>
             </div>
         </a>
@@ -50,7 +50,7 @@
                 @if($sidebarInternship)
                     <a href="{{ route('documents.summary', $sidebarInternship) }}"
                        class="sidebar-link {{ request()->routeIs('documents.summary') ? 'active' : '' }}">
-                        <span aria-hidden="true">📄</span> Rekap & Laporan
+                        <span aria-hidden="true">▤</span> Rekap & Laporan
                     </a>
                 @endif
 
@@ -117,10 +117,10 @@
         <header class="topbar">
             <button class="topbar-hamburger" id="hamburgerBtn" onclick="openSidebar()"
                     aria-label="Buka navigasi" aria-expanded="false" aria-controls="sidebar">
-                ☰
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:block;"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
             <div class="topbar-breadcrumb">
-                DailyLog PKL &rsaquo; <strong>@yield('title', 'Halaman')</strong>
+                Logbook Generator &rsaquo; <strong>@yield('title', 'Halaman')</strong>
             </div>
         </header>
 
@@ -150,7 +150,7 @@
         </main>
 
         <footer class="site-footer">
-            &copy; {{ date('Y') }} DailyLog PKL &mdash; Platform Manajemen Aktivitas & Generator Logbook PKL.
+            &copy; {{ date('Y') }} Logbook Generator &mdash; Platform Manajemen Aktivitas & Generator Logbook PKL.
         </footer>
     </div>
 </div>
@@ -179,6 +179,8 @@ function closeSidebar() {
     document.getElementById('hamburgerBtn').setAttribute('aria-expanded', 'false');
 }
 </script>
+
+@include('components.confirm-modal')
 
 @yield('scripts')
 </body>

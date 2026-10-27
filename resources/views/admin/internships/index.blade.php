@@ -72,7 +72,7 @@
                                 <a href="{{ route('admin.internships.edit', $intern) }}" class="btn btn-secondary btn-sm">
                                     Edit
                                 </a>
-                                <form action="{{ route('admin.internships.destroy', $intern) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus penugasan PKL ini beserta seluruh logbook aktivitasnya?');">
+                                <form action="{{ route('admin.internships.destroy', $intern) }}" method="POST" style="display:inline;" data-confirm="Hapus penugasan PKL untuk {{ $intern->student->user->name ?? 'mahasiswa ini' }} beserta seluruh data aktivitas logbook-nya? Tindakan ini tidak dapat dibatalkan." data-confirm-title="Hapus Penugasan PKL" data-confirm-btn="Ya, Hapus" data-confirm-variant="danger">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">

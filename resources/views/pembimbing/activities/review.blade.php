@@ -75,7 +75,7 @@
                     @foreach($activity->attachments as $att)
                         <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; background: var(--bg-surface);">
                             @if($att->isImage())
-                                <div style="height: 100px; overflow: hidden; border-radius: var(--radius-sm); margin-bottom: 8px; background: #eee; display: flex; align-items: center; justify-content: center;">
+                                <div style="height: 100px; overflow: hidden; border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center;">
                                     <img src="{{ asset('storage/' . $att->file_path) }}" alt="{{ $att->file_name }}" style="max-width: 100%; max-height: 100%; object-fit: cover;">
                                 </div>
                             @else
@@ -100,7 +100,7 @@
     </div>
 
     <!-- Form Putusan Approval Pembimbing -->
-    <div class="card" style="border-top: 4px solid var(--primary);">
+    <div class="card" style="border-top: 4px solid var(--accent);">
         <h2 class="card-title" style="margin-bottom: 16px;">Keputusan Pembimbing</h2>
 
         <form action="{{ route('pembimbing.activities.approval', $activity) }}" method="POST">
@@ -112,7 +112,7 @@
                     <label style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; background: var(--bg-surface);">
                         <input type="radio" name="status" value="Disetujui" {{ old('status', $activity->status) === 'Disetujui' ? 'checked' : '' }} required>
                         <div>
-                            <strong style="color: #065f46; display: block;">Setujui Aktivitas</strong>
+                            <strong style="color: var(--success-text); display: block;">Setujui Aktivitas</strong>
                             <span style="font-size: 12px; color: var(--text-muted);">Aktivitas valid dan resmi masuk ke buku logbook PKL.</span>
                         </div>
                     </label>
@@ -120,7 +120,7 @@
                     <label style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; background: var(--bg-surface);">
                         <input type="radio" name="status" value="Revisi" {{ old('status', $activity->status) === 'Revisi' ? 'checked' : '' }}>
                         <div>
-                            <strong style="color: #991b1b; display: block;">Minta Revisi</strong>
+                            <strong style="color: var(--danger-text); display: block;">Minta Revisi</strong>
                             <span style="font-size: 12px; color: var(--text-muted);">Aktivitas belum memenuhi standar dan harus diperbaiki mahasiswa.</span>
                         </div>
                     </label>

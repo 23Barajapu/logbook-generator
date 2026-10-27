@@ -29,7 +29,7 @@
             <a href="{{ route('mahasiswa.activities.edit', $activity) }}" class="btn btn-secondary">
                 Edit Aktivitas
             </a>
-            <form action="{{ route('mahasiswa.activities.submit', $activity) }}" method="POST" style="display:inline;" onsubmit="return confirm('Ajukan aktivitas ini ke pembimbing?');">
+            <form action="{{ route('mahasiswa.activities.submit', $activity) }}" method="POST" style="display:inline;" data-confirm="Ajukan aktivitas ini ke dosen pembimbing untuk proses approval?" data-confirm-title="Ajukan Approval" data-confirm-btn="Ya, Ajukan" data-confirm-variant="primary">
                 @csrf
                 <button type="submit" class="btn btn-primary">
                     Ajukan Approval
@@ -89,7 +89,7 @@
                         <div style="border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 10px; background: var(--bg-surface); display: flex; flex-direction: column; justify-content: space-between;">
                             <div>
                                 @if($att->isImage())
-                                    <div style="height: 120px; overflow: hidden; border-radius: var(--radius-sm); margin-bottom: 8px; background: #eee; display: flex; align-items: center; justify-content: center;">
+                                    <div style="height: 120px; overflow: hidden; border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center;">
                                         <img src="{{ asset('storage/' . $att->file_path) }}" alt="{{ $att->file_name }}" style="max-width: 100%; max-height: 100%; object-fit: cover;">
                                     </div>
                                 @else
@@ -127,7 +127,7 @@
             @else
                 <div style="display: flex; flex-direction: column; gap: 12px;">
                     @foreach($activity->approvals as $appr)
-                        <div style="border-left: 3px solid {{ $appr->status === 'Disetujui' ? 'var(--success-border)' : 'var(--danger-border)' }}; padding-left: 12px;">
+                        <div class="approval-history-item {{ $appr->status === 'Disetujui' ? 'is-approved' : 'is-rejected' }}">
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
                                 <strong style="font-size: 13px;">{{ $appr->status }}</strong>
                                 <span style="font-size: 11px; color: var(--text-muted);">{{ $appr->approved_at ? $appr->approved_at->format('d/m/Y H:i') : '-' }}</span>

@@ -84,4 +84,9 @@ class Internship extends Model
     {
         return $this->hasOne(Evaluation::class);
     }
+
+    public function importedDocuments(): HasMany
+    {
+        return $this->hasMany(ImportedDocument::class);
+    }
 }

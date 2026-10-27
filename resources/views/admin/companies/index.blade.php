@@ -54,7 +54,7 @@
                                 <a href="{{ route('admin.companies.edit', $comp) }}" class="btn btn-secondary btn-sm">
                                     Edit
                                 </a>
-                                <form action="{{ route('admin.companies.destroy', $comp) }}" method="POST" style="display:inline;" onsubmit="return confirm('Hapus perusahaan mitra ini?');">
+                                <form action="{{ route('admin.companies.destroy', $comp) }}" method="POST" style="display:inline;" data-confirm="Hapus data perusahaan mitra {{ $comp->company_name }}? Tindakan ini tidak dapat dibatalkan." data-confirm-title="Hapus Perusahaan" data-confirm-btn="Ya, Hapus" data-confirm-variant="danger">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm">

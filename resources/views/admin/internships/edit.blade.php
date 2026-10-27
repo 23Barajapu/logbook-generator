@@ -74,19 +74,19 @@
 
         <div class="form-group">
             <label class="form-label">Logo Kampus Saat Ini</label>
-            <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: var(--bg-hover); border-radius: var(--radius); border: 1px solid var(--border-light);">
+            <div style="display: flex; align-items: center; gap: 16px; padding: 12px; background: var(--bg-hover); border-radius: var(--r-md); border: 1px solid var(--border-light);">
                 <div style="width: 60px; height: 60px; background: #ffffff; border-radius: 6px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 4px; overflow: hidden; flex-shrink: 0;">
                     <img src="{{ $internship->campus_logo_url }}" alt="Logo Kampus" style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
                 <div>
                     @if($internship->campus_logo)
-                        <div style="font-weight: 600; font-size: 13px; color: var(--text-color);">Logo Kustom Terpasang</div>
+                        <div style="font-weight: 600; font-size: 13px; color: var(--text-primary);">Logo Kustom Terpasang</div>
                         <label style="display: inline-flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px; cursor: pointer; color: var(--danger-text);">
                             <input type="checkbox" name="remove_campus_logo" value="1">
                             Kembalikan ke logo bawaan Polsub
                         </label>
                     @else
-                        <div style="font-weight: 600; font-size: 13px; color: var(--text-color);">Logo Bawaan (Politeknik Negeri Subang)</div>
+                        <div style="font-weight: 600; font-size: 13px; color: var(--text-primary);">Logo Bawaan (Politeknik Negeri Subang)</div>
                         <div class="form-hint" style="margin-top: 2px;">Dokumen logbook saat ini menggunakan logo default Polsub.</div>
                     @endif
                 </div>

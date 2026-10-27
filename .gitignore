@@ -27,6 +27,8 @@ yarn-error.log
 BUKU AKTIVITAS HARIAN*
 *.docx
 *.pdf
+!resources/templates/*.docx
+!public/templates/*.docx
 scratch/
 
 # File storage upload dan lampiran pengguna

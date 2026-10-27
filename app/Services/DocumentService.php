@@ -631,6 +631,232 @@ class DocumentService
         return $tempPath;
     }
 
+    /**
+     * Hasilkan atau dapatkan path template file DOCX resmi untuk diunduh pengguna
+     */
+    public function generateTemplateDocx(bool $forceRegenerate = false): string
+    {
+        $masterTemplate = resource_path('templates/template-logbook-pkl.docx');
+        $templatesDir = storage_path('app/templates');
+        if (! is_dir($templatesDir)) {
+            mkdir($templatesDir, 0755, true);
+        }
+
+        $templatePath = $templatesDir . '/Template_Logbook_PKL.docx';
+        $publicDir = public_path('templates');
+        if (! is_dir($publicDir)) {
+            mkdir($publicDir, 0755, true);
+        }
+        $publicTemplate = $publicDir . '/Template_Logbook_PKL.docx';
+
+        // Jika master template resmi institusi tersedia di resources/templates, gunakan langsung
+        if (file_exists($masterTemplate) && filesize($masterTemplate) > 0) {
+            if ($forceRegenerate || ! file_exists($templatePath) || filesize($templatePath) !== filesize($masterTemplate)) {
+                @copy($masterTemplate, $templatePath);
+            }
+            if ($forceRegenerate || ! file_exists($publicTemplate) || filesize($publicTemplate) !== filesize($masterTemplate)) {
+                @copy($masterTemplate, $publicTemplate);
+            }
+            return $templatePath;
+        }
+
+        if (! $forceRegenerate && file_exists($templatePath) && filesize($templatePath) > 0) {
+            if (! file_exists($publicTemplate) || filesize($publicTemplate) === 0) {
+                @copy($templatePath, $publicTemplate);
+            }
+            return $templatePath;
+        }
+
+        $phpWord = new PhpWord();
+        $phpWord->setDefaultFontName('Times New Roman');
+        $phpWord->setDefaultFontSize(12);
+
+        $section = $phpWord->addSection([
+            'orientation' => 'landscape',
+            'pageSizeW' => 16838,
+            'pageSizeH' => 11906,
+            'marginTop' => 1134,
+            'marginBottom' => 1134,
+            'marginLeft' => 1701,
+            'marginRight' => 1440,
+        ]);
+
+        // Header Dokumen
+        $section->addText(
+            $this->cleanText('TEMPLATE CATATAN AKTIVITAS HARIAN PRAKTIK KERJA LAPANGAN (PKL)'),
+            ['bold' => true, 'size' => 14],
+            ['alignment' => Jc::CENTER, 'spaceAfter' => 60]
+        );
+        $section->addText(
+            $this->cleanText('Format Dokumen Standar untuk Ekstraksi Logbook Generator'),
+            ['italic' => true, 'size' => 11, 'color' => '555555'],
+            ['alignment' => Jc::CENTER, 'spaceAfter' => 180]
+        );
+
+        // Petunjuk Pengisian
+        $section->addText(
+            $this->cleanText('Petunjuk Pengisian Dokumen:'),
+            ['bold' => true, 'size' => 11],
+            ['spaceBefore' => 60, 'spaceAfter' => 40]
+        );
+        $section->addText(
+            $this->cleanText('1. Penanda Hari: Tulis judul hari dengan pola "Hari Ke-[Nomor], Tanggal [Tanggal Bulan Tahun]". Contoh: Hari Ke-1, Tanggal 3 Agustus 2026.'),
+            ['size' => 10],
+            ['spaceAfter' => 20]
+        );
+        $section->addText(
+            $this->cleanText('2. Tabel 3 Kolom: Setiap hari wajib menggunakan format tabel 3 kolom: [Bidang Pekerjaan], [Kegiatan & Bukti Dokumentasi], dan [Tools yang digunakan , Masalah dan Solusi].'),
+            ['size' => 10],
+            ['spaceAfter' => 20]
+        );
+        $section->addText(
+            $this->cleanText('3. Foto Bukti Dokumentasi: Sisipkan gambar dokumentasi kegiatan langsung pada kolom tengah (Kegiatan & Bukti). Sistem Logbook Generator akan otomatis mengekstrak foto tersebut.'),
+            ['size' => 10],
+            ['spaceAfter' => 20]
+        );
+        $section->addText(
+            $this->cleanText('4. Pengunggahan: Setelah diisi, unggah dokumen ini melalui menu "Import DOCX / PDF" pada aplikasi untuk ditinjau dan disimpan ke database.'),
+            ['size' => 10],
+            ['spaceAfter' => 160]
+        );
+
+        $actTableStyle = [
+            'borderSize' => 6,
+            'borderColor' => '000000',
+            'cellMarginTop' => 70,
+            'cellMarginBottom' => 70,
+            'cellMarginLeft' => 100,
+            'cellMarginRight' => 100,
+        ];
+
+        // Contoh Data Hari 1 s/d Hari 5
+        $sampleDays = [
+            [
+                'day' => 1,
+                'date' => '3 Agustus 2026',
+                'field' => 'Quality Control',
+                'activities' => [
+                    '1. Mengikuti briefing awal pelaksanaan Praktik Kerja Lapangan dan perkenalan dengan tim kerja perusahaan.',
+                    '2. Mempelajari Standard Operating Procedure (SOP) pengujian sistem dan arsitektur proyek aplikasi.',
+                    '3. Melakukan instalasi perangkat lunak pendukung pengujian dan konfigurasi environment lokal.',
+                    '',
+                    '[Catatan: Anda dapat menyisipkan foto dokumentasi / tangkapan layar kegiatan di dalam kolom ini]',
+                ],
+                'tools' => "Tools yang digunakan:\n- Git & GitHub\n- Google Chrome & DevTools\n- Postman\n\nMasalah:\n- Adaptasi terhadap struktur dan spesifikasi kebutuhan aplikasi baru.\n\nSolusi:\n- Mempelajari dokumentasi teknis dan berkonsultasi dengan pembimbing lapangan.",
+            ],
+            [
+                'day' => 2,
+                'date' => '4 Agustus 2026',
+                'field' => 'Quality Control',
+                'activities' => [
+                    '1. Melakukan pengujian fungsional modul autentikasi (login, logout, register, dan reset password).',
+                    '2. Mencatat temuan bug validasi input formulir ke dalam sistem pelacakan issue tim.',
+                ],
+                'tools' => "Tools yang digunakan:\n- Postman\n- Jira / Trello\n\nMasalah:\n- Validasi karakter khusus pada kolom formulir belum konsisten.\n\nSolusi:\n- Membuat tiket pelaporan bug dengan detail skenario reproduksi langkah demi langkah.",
+            ],
+            [
+                'day' => 3,
+                'date' => '5 Agustus 2026',
+                'field' => '[Tulis Bidang Pekerjaan]',
+                'activities' => [
+                    '1. [Tuliskan uraian aktivitas atau pekerjaan yang Anda lakukan pada hari ini]',
+                    '2. [Sisipkan gambar / screenshot bukti kegiatan di sini jika ada]',
+                ],
+                'tools' => "Tools yang digunakan:\n-\n\nMasalah:\n-\n\nSolusi:\n-",
+            ],
+            [
+                'day' => 4,
+                'date' => '6 Agustus 2026',
+                'field' => '[Tulis Bidang Pekerjaan]',
+                'activities' => [
+                    '1. [Tuliskan uraian aktivitas atau pekerjaan hari ini]',
+                ],
+                'tools' => "Tools yang digunakan:\n-\n\nMasalah:\n-\n\nSolusi:\n-",
+            ],
+            [
+                'day' => 5,
+                'date' => '7 Agustus 2026',
+                'field' => '[Tulis Bidang Pekerjaan]',
+                'activities' => [
+                    '1. [Tuliskan uraian aktivitas atau pekerjaan hari ini]',
+                ],
+                'tools' => "Tools yang digunakan:\n-\n\nMasalah:\n-\n\nSolusi:\n-",
+            ],
+        ];
+
+        foreach ($sampleDays as $item) {
+            $section->addText(
+                $this->cleanText('Hari Ke-' . $item['day'] . ', Tanggal ' . $item['date']),
+                ['bold' => true, 'size' => 12],
+                ['spaceBefore' => 160, 'spaceAfter' => 60]
+            );
+
+            $table = $section->addTable($actTableStyle);
+
+            // Baris Header Tabel
+            $table->addRow(440, ['cantSplit' => true]);
+            $table->addCell(1800, ['valign' => 'center'])->addText(
+                $this->cleanText('Bidang Pekerjaan'),
+                ['bold' => true, 'size' => 10],
+                ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
+            );
+            $table->addCell(8967, ['valign' => 'center'])->addText(
+                $this->cleanText('Kegiatan & Bukti Dokumentasi'),
+                ['bold' => true, 'size' => 10],
+                ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
+            );
+            $table->addCell(2920, ['valign' => 'center'])->addText(
+                $this->cleanText('Tools yang digunakan , Masalah dan Solusi'),
+                ['bold' => true, 'size' => 10],
+                ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
+            );
+
+            // Baris Data
+            $table->addRow(null, ['cantSplit' => true]);
+
+            // Kolom 1
+            $table->addCell(1800)->addText(
+                $this->cleanText($item['field']),
+                ['size' => 9],
+                ['alignment' => Jc::CENTER, 'spaceAfter' => 0]
+            );
+
+            // Kolom 2
+            $cellKegiatan = $table->addCell(8967);
+            foreach ($item['activities'] as $line) {
+                $cellKegiatan->addText(
+                    $this->cleanText($line),
+                    ['size' => 9],
+                    ['spaceAfter' => 30]
+                );
+            }
+
+            // Kolom 3
+            $cellTools = $table->addCell(2920);
+            $toolLines = explode("\n", $item['tools']);
+            foreach ($toolLines as $tl) {
+                $cellTools->addText(
+                    $this->cleanText($tl),
+                    ['size' => 9],
+                    ['spaceAfter' => 20]
+                );
+            }
+
+            $section->addTextBreak(1);
+        }
+
+        $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
+        $objWriter->save($templatePath);
+
+        $publicDir = public_path('templates');
+        if (! is_dir($publicDir)) {
+            mkdir($publicDir, 0755, true);
+        }
+        @copy($templatePath, $publicDir . '/Template_Logbook_PKL.docx');
+
+        return $templatePath;
+    }
+
     private function cleanText(?string $text): string
     {
         if ($text === null || $text === '') {

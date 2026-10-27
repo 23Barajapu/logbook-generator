@@ -17,19 +17,25 @@
 
 <div class="grid-stats" role="region" aria-label="Ringkasan statistik sistem">
     <div class="stat-card">
-        <div class="stat-icon" aria-hidden="true">👤</div>
+        <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </div>
         <div class="stat-label">Total Mahasiswa</div>
         <div class="stat-value">{{ $stats['total_students'] }}</div>
         <div class="stat-meta"><a href="{{ route('admin.students') }}">Kelola data &rarr;</a></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" aria-hidden="true">🎓</div>
+        <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+        </div>
         <div class="stat-label">Dosen Pembimbing</div>
         <div class="stat-value">{{ $stats['total_supervisors'] }}</div>
         <div class="stat-meta"><a href="{{ route('admin.supervisors') }}">Kelola pembimbing &rarr;</a></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" aria-hidden="true">🏢</div>
+        <div class="stat-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="22.01"></line><line x1="15" y1="22" x2="15" y2="22.01"></line><line x1="9" y1="6" x2="9" y2="6.01"></line><line x1="15" y1="6" x2="15" y2="6.01"></line><line x1="9" y1="10" x2="9" y2="10.01"></line><line x1="15" y1="10" x2="15" y2="10.01"></line><line x1="9" y1="14" x2="9" y2="14.01"></line><line x1="15" y1="14" x2="15" y2="14.01"></line><line x1="9" y1="18" x2="9" y2="18.01"></line><line x1="15" y1="18" x2="15" y2="18.01"></line></svg>
+        </div>
         <div class="stat-label">Perusahaan Mitra</div>
         <div class="stat-value">{{ $stats['total_companies'] }}</div>
         <div class="stat-meta"><a href="{{ route('admin.companies') }}">Kelola mitra &rarr;</a></div>

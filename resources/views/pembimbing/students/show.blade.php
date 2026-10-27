@@ -58,7 +58,7 @@
         <h2 class="card-title" style="margin-bottom: 12px;">Status Nilai Akhir</h2>
         @if($internship->evaluation)
             <div style="text-align: center; padding: 12px 0;">
-                <div style="font-size: 36px; font-weight: 700; color: #065f46;">
+                <div style="font-size: 36px; font-weight: 700; color: var(--success-text);">
                     {{ $internship->evaluation->final_score }}
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Skala 0 - 100</div>
@@ -102,7 +102,7 @@
                 </thead>
                 <tbody>
                     @foreach($internship->activities as $act)
-                    <tr style="{{ $act->status === 'Menunggu Approval' ? 'background-color: #fffdf5;' : '' }}">
+                    <tr class="{{ $act->status === 'Menunggu Approval' ? 'table-row-pending' : '' }}">
                         <td style="font-weight: 700; text-align: center;">{{ $act->day_number }}</td>
                         <td>{{ $act->activity_date ? $act->activity_date->format('d/m/Y') : '-' }}</td>
                         <td style="font-weight: 600;">{{ $act->work_field }}</td>
