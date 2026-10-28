@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Route;
 // Rute Autentikasi Publik
 Route::get('/', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/login', [AuthController::class, 'showLogin']);
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('login.post');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
-Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1')->name('register.post');
 Route::get('/template-logbook', [DocumentController::class, 'downloadTemplate'])->name('template.public');
 
 // Authenticated Routes

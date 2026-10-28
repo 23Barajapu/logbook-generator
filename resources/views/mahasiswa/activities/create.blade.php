@@ -16,7 +16,7 @@
 </div>
 
 <div class="card" style="max-width: 840px;">
-    <form action="{{ route('mahasiswa.activities.store') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('mahasiswa.activities.store') }}" method="POST" enctype="multipart/form-data" data-upload-form data-process-title="Menyimpan Aktivitas & Bukti Kegiatan" data-process-steps='["Memeriksa kelengkapan aktivitas...", "Mengunggah file bukti dokumentasi...", "Menyimpan ke database logbook..."]'>
         @csrf
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">

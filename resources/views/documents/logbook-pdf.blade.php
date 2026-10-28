@@ -131,7 +131,6 @@
             margin-bottom: 12px;
         }
         .day-block {
-            page-break-inside: avoid;
             margin-bottom: 16px;
         }
         .day-title {
@@ -143,7 +142,6 @@
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-            page-break-inside: avoid;
         }
         .activity-table th, .activity-table td {
             border: 1px solid #000000;
@@ -161,12 +159,40 @@
             margin: 0 0 4px 0;
             line-height: 1.3;
         }
-        .activity-evidence img {
-            max-width: 100%;
-            max-height: 250px;
-            object-fit: contain;
+        .activity-evidence {
             margin-top: 6px;
+            text-align: left;
+        }
+        /* 1 gambar bukti */
+        .activity-evidence.count-1 img {
+            max-width: 95%;
+            max-height: 220px;
             display: block;
+            margin: 4px auto;
+        }
+        /* 2 gambar bukti bersebelahan */
+        .activity-evidence.count-2 img {
+            max-width: 48%;
+            max-height: 170px;
+            display: inline-block;
+            vertical-align: top;
+            margin: 2px 1%;
+        }
+        /* 3 s.d. 4 gambar bukti grid 2 kolom */
+        .activity-evidence.count-medium img {
+            max-width: 48%;
+            max-height: 140px;
+            display: inline-block;
+            vertical-align: top;
+            margin: 2px 1%;
+        }
+        /* 5 gambar bukti atau lebih (grid multi-kolom proporsional) */
+        .activity-evidence.count-many img {
+            max-width: 23.5%;
+            max-height: 115px;
+            display: inline-block;
+            vertical-align: top;
+            margin: 2px 0.4%;
         }
         .tools-box div {
             line-height: 1.3;
@@ -192,7 +218,9 @@
         <div class="cover-title-3">TA. {{ $academicYear }}</div>
 
         <div class="cover-logo-box">
-            @if(!empty($campusLogoBase64))
+            @if(!empty($campusLogoPath) && file_exists($campusLogoPath))
+                <img src="{{ $campusLogoPath }}" alt="Logo Kampus">
+            @elseif(!empty($campusLogoBase64))
                 <img src="{{ $campusLogoBase64 }}" alt="Logo Kampus">
             @endif
         </div>
@@ -287,9 +315,15 @@
                         </div>
 
                         @if($act->attachments && $act->attachments->isNotEmpty())
-                            <div class="activity-evidence">
+                            @php
+                                $imgCount = $act->attachments->filter(fn($a) => $a->isImage())->count();
+                                $countClass = $imgCount <= 1 ? 'count-1' : ($imgCount == 2 ? 'count-2' : ($imgCount <= 4 ? 'count-medium' : 'count-many'));
+                            @endphp
+                            <div class="activity-evidence {{ $countClass }}">
                                 @foreach($act->attachments as $att)
-                                    @if(!empty($att->base64_src))
+                                    @if(!empty($att->pdf_image_path))
+                                        <img src="{{ $att->pdf_image_path }}" alt="Bukti Kegiatan">
+                                    @elseif(!empty($att->base64_src))
                                         <img src="{{ $att->base64_src }}" alt="Bukti Kegiatan">
                                     @elseif(!$att->isImage())
                                         <p style="font-size: 8pt; font-style: italic; margin-top: 4px;">[Lampiran Dokumen: {{ $att->file_name }}]</p>

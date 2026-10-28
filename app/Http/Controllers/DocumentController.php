@@ -46,6 +46,9 @@ class DocumentController extends Controller
     {
         $this->authorizeInternshipAccess($internship);
 
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(300);
+
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');
         $week = $request->query('week');
@@ -62,6 +65,9 @@ class DocumentController extends Controller
     public function downloadDocx(Request $request, Internship $internship): BinaryFileResponse
     {
         $this->authorizeInternshipAccess($internship);
+
+        @ini_set('memory_limit', '1024M');
+        @set_time_limit(300);
 
         $startDate = $request->query('start_date');
         $endDate = $request->query('end_date');

@@ -18,7 +18,7 @@
 <div style="display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: stretch;">
     <!-- Form Upload Section Card -->
     <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 0;">
-        <form action="{{ route('mahasiswa.activities.import.process') }}" method="POST" enctype="multipart/form-data" id="import-form" style="display: flex; flex-direction: column; height: 100%;">
+        <form action="{{ route('mahasiswa.activities.import.process') }}" method="POST" enctype="multipart/form-data" id="import-form" style="display: flex; flex-direction: column; height: 100%;" data-upload-form data-process-title="Mengekstrak Dokumen Logbook" data-process-steps='["Mengunggah berkas dokumen (.docx / .pdf)...", "Membaca penanda hari & tabel 3 kolom...", "Mengekstrak teks & bukti foto dokumentasi...", "Menyusun pratinjau aktivitas logbook..."]'>
             @csrf
 
             <div style="flex: 1;">
@@ -28,7 +28,7 @@
                 </label>
                 
                 <!-- Drag and Drop Dropzone -->
-                <div id="dropzone" style="border: 2px dashed var(--border); border-radius: var(--r-lg); padding: 44px 24px; text-align: center; background: var(--bg-elevated); cursor: pointer; transition: all var(--t-mid); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 220px;">
+                <div id="dropzone" class="dropzone-container">
                     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" style="color: var(--accent); margin-bottom: 14px;">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
@@ -127,7 +127,7 @@
                 <p style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 12px;">
                     Unduh template resmi Microsoft Word (<strong>.docx</strong>) berstandar institusional yang sudah disesuaikan dengan format tabel 3 kolom dan penanda hari sistem ini.
                 </p>
-                <a href="{{ route('mahasiswa.activities.import.template') }}" class="btn btn-secondary btn-sm" id="btn-download-import-template" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 8px 14px; text-decoration: none;">
+                <a href="{{ route('mahasiswa.activities.import.template') }}" class="btn btn-secondary btn-sm" id="btn-download-import-template" data-download="docx" data-download-title="Mengunduh Template Logbook (.docx)" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; padding: 8px 14px; text-decoration: none;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -163,9 +163,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dropzone.addEventListener(eventName, (e) => {
             e.preventDefault();
             e.stopPropagation();
-            dropzone.style.borderColor = 'var(--accent)';
-            dropzone.style.background = 'var(--bg-hover)';
-            dropzone.style.boxShadow = 'var(--accent-glow)';
+            dropzone.classList.add('is-dragover');
         });
     });
 
@@ -173,9 +171,7 @@ document.addEventListener('DOMContentLoaded', function () {
         dropzone.addEventListener(eventName, (e) => {
             e.preventDefault();
             e.stopPropagation();
-            dropzone.style.borderColor = 'var(--border)';
-            dropzone.style.background = 'var(--bg-elevated)';
-            dropzone.style.boxShadow = 'none';
+            dropzone.classList.remove('is-dragover');
         });
     });
 
@@ -236,14 +232,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         fileCount.textContent = selectedFiles.length;
 
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
         if (selectedFiles.length > 0) {
             fileListContainer.style.display = 'block';
             btnSubmit.removeAttribute('disabled');
             fileList.innerHTML = '';
 
             selectedFiles.forEach((file, idx) => {
-                const ext = file.name.toLowerCase().split('.').pop();
-                const isPdf = ext === 'pdf';
+                const rawExt = file.name.toLowerCase().split('.').pop() || '';
+                const ext = escapeHtml(rawExt);
+                const safeName = escapeHtml(file.name);
+                const isPdf = rawExt === 'pdf';
                 const extBadgeColor = isPdf ? 'color: var(--danger-text); background: var(--danger-dim); border-color: rgba(239, 68, 68, 0.3);' : 'color: var(--accent); background: var(--accent-dim); border-color: var(--border);';
                 
                 const sizeKb = (file.size / 1024).toFixed(1);
@@ -254,7 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 item.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
                         <span style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; border: 1px solid; ${extBadgeColor}">${ext}</span>
-                        <span style="font-weight: 500; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 300px;" title="${file.name}">${file.name}</span>
+                        <span style="font-weight: 500; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden; max-width: 300px;" title="${safeName}">${safeName}</span>
                         <span style="color: var(--text-muted); font-size: 11.5px;">(${sizeStr})</span>
                     </div>
                     <button type="button" data-index="${idx}" class="btn-remove-file" style="background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px 8px; font-size: 18px; line-height: 1;" title="Hapus file">&times;</button>
@@ -278,7 +285,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     form.addEventListener('submit', () => {
-        btnSubmit.setAttribute('disabled', 'disabled');
+        btnSubmit.style.opacity = '0.75';
+        btnSubmit.style.cursor = 'wait';
         btnSubmit.innerHTML = 'Memproses &amp; Mengekstrak Dokumen...';
     });
 });

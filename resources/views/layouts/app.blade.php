@@ -181,6 +181,7 @@ function closeSidebar() {
 </script>
 
 @include('components.confirm-modal')
+@include('components.process-feedback')
 
 @yield('scripts')
 </body>

@@ -11,10 +11,10 @@
         </div>
     </div>
     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <a href="{{ route('documents.pdf', $internship) }}" class="btn btn-primary">
+        <a href="{{ route('documents.pdf', $internship) }}" class="btn btn-primary" data-download="pdf" data-download-title="Mengunduh Rekap Laporan PDF">
             Download PDF Resmi
         </a>
-        <a href="{{ route('documents.docx', $internship) }}" class="btn btn-secondary">
+        <a href="{{ route('documents.docx', $internship) }}" class="btn btn-secondary" data-download="docx" data-download-title="Mengunduh Rekap Dokumen Word">
             Download Dokumen DOCX
         </a>
     </div>
@@ -67,8 +67,10 @@
                 @endforeach
             </div>
             <script>
-                document.querySelectorAll('.field-progress-bar').forEach(function(el) {
-                    el.style.width = el.getAttribute('data-width') + '%';
+                requestAnimationFrame(function() {
+                    document.querySelectorAll('.field-progress-bar').forEach(function(el) {
+                        el.style.width = el.getAttribute('data-width') + '%';
+                    });
                 });
             </script>
         @endif

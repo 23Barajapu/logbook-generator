@@ -67,19 +67,7 @@ class DocumentService
             : ($internship->end_date ? $internship->end_date->translatedFormat('j F Y') : now()->translatedFormat('j F Y'));
 
         $logoPath = $internship->getEffectiveCampusLogoRealPath();
-        $logoBase64 = null;
-        if ($logoPath && file_exists($logoPath)) {
-            $ext = strtolower(pathinfo($logoPath, PATHINFO_EXTENSION));
-            $mime = match ($ext) {
-                'png' => 'image/png',
-                'jpg', 'jpeg' => 'image/jpeg',
-                default => 'image/png',
-            };
-            $logoData = file_get_contents($logoPath);
-            if ($logoData !== false) {
-                $logoBase64 = 'data:' . $mime . ';base64,' . base64_encode($logoData);
-            }
-        }
+        $effectiveLogoPath = ($logoPath && file_exists($logoPath)) ? $logoPath : null;
 
         foreach ($activities as $act) {
             if ($act->attachments) {
@@ -87,17 +75,7 @@ class DocumentService
                     if ($att->isImage()) {
                         $filePath = storage_path('app/public/' . $att->file_path);
                         if (file_exists($filePath)) {
-                            $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
-                            $mime = match ($ext) {
-                                'png' => 'image/png',
-                                'webp' => 'image/webp',
-                                'jpg', 'jpeg' => 'image/jpeg',
-                                default => 'image/jpeg',
-                            };
-                            $data = file_get_contents($filePath);
-                            if ($data !== false) {
-                                $att->base64_src = 'data:' . $mime . ';base64,' . base64_encode($data);
-                            }
+                            $att->pdf_image_path = $this->getOptimizedPdfImagePath($filePath);
                         }
                     }
                 }
@@ -128,10 +106,13 @@ class DocumentService
             'supervisor' => $internship->supervisor,
             'activities' => $activities,
             'evaluation' => $internship->evaluation,
-            'campusLogoBase64' => $logoBase64,
+            'campusLogoPath' => $effectiveLogoPath,
+            'campusLogoBase64' => null,
         ]);
 
         $pdf->setPaper('a4', 'landscape');
+        $pdf->getDomPDF()->set_option('chroot', [public_path(), storage_path()]);
+        $pdf->getDomPDF()->set_option('isRemoteEnabled', false);
 
         return $pdf;
     }
@@ -871,6 +852,79 @@ class DocumentService
         @copy($templatePath, $publicDir . '/Template_Logbook_PKL.docx');
 
         return $templatePath;
+    }
+
+    /**
+     * Dapatkan path gambar resolusi penuh (Full Resolution & High Quality) yang kompatibel dengan DomPDF.
+     * Gambar dipertahankan dalam resolusi aslinya (hingga Full HD 1080p) dan kualitas 95% tanpa artefak buram,
+     * serta dikonversi menjadi format JPEG stream yang dapat di-embed langsung oleh DomPDF tanpa decode PHP berat.
+     */
+    protected function getOptimizedPdfImagePath(string $originalPath): string
+    {
+        if (! file_exists($originalPath)) {
+            return $originalPath;
+        }
+
+        // Jika gambar asli sudah berformat JPEG, langsung gunakan tanpa modifikasi (100% original)
+        $ext = strtolower(pathinfo($originalPath, PATHINFO_EXTENSION));
+        if (in_array($ext, ['jpg', 'jpeg'])) {
+            return $originalPath;
+        }
+
+        $thumbDir = storage_path('app/public/pdf_fullres');
+        if (! is_dir($thumbDir)) {
+            @mkdir($thumbDir, 0755, true);
+        }
+
+        $hash = md5($originalPath . '_fullres_' . filemtime($originalPath));
+        $targetPath = $thumbDir . DIRECTORY_SEPARATOR . $hash . '.jpg';
+
+        if (file_exists($targetPath) && filesize($targetPath) > 0) {
+            return $targetPath;
+        }
+
+        $info = @getimagesize($originalPath);
+        if (! $info) {
+            return $originalPath;
+        }
+
+        $origW = $info[0];
+        $origH = $info[1];
+        $mime = $info['mime'] ?? '';
+
+        $src = match ($mime) {
+            'image/png' => @imagecreatefrompng($originalPath),
+            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($originalPath) : null,
+            default => null,
+        };
+
+        if (! $src) {
+            return $originalPath;
+        }
+
+        // Pertahankan 100% resolusi asli tanpa kompresi pecah.
+        // Hanya gambar ultra-tinggi (di atas 1920px seperti 4K) yang dibatasi ke Full HD 1920px agar tidak melebihi memori PDF.
+        if ($origW > 1920) {
+            $scale = 1920 / $origW;
+            $targetW = 1920;
+            $targetH = max(1, (int) ($origH * $scale));
+        } else {
+            $targetW = $origW;
+            $targetH = $origH;
+        }
+
+        $dst = imagecreatetruecolor($targetW, $targetH);
+        $white = imagecolorallocate($dst, 255, 255, 255);
+        imagefilledrectangle($dst, 0, 0, $targetW, $targetH, $white);
+
+        imagecopyresampled($dst, $src, 0, 0, 0, 0, $targetW, $targetH, $origW, $origH);
+        // Kualitas 95% menghasilkan gambar sangat tajam, jernih, dan tidak tampak terkompresi
+        imagejpeg($dst, $targetPath, 95);
+
+        imagedestroy($src);
+        imagedestroy($dst);
+
+        return $targetPath;
     }
 
     private function cleanText(?string $text): string

@@ -88,7 +88,7 @@ class Supervisor extends Model
         $user = User::create([
             'name' => $trimmedName,
             'email' => $finalEmail,
-            'password' => \Illuminate\Support\Facades\Hash::make('password'),
+            'password' => \Illuminate\Support\Facades\Hash::make(\Illuminate\Support\Str::random(32)),
             'role' => 'pembimbing',
         ]);
 

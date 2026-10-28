@@ -644,6 +644,13 @@ class DocxImportService
                     continue;
                 }
 
+                // Keamanan: Aktivitas yang telah disetujui atau sedang ditinjau pembimbing tidak boleh ditimpa
+                if ($existing && ! in_array($existing->status, ['Draft', 'Revisi'], true)) {
+                    Log::info("Impor dilewati: Aktivitas hari ke-{$dayNum} berstatus {$existing->status} tidak dapat ditimpa sepihak.");
+                    $stats['skipped']++;
+                    continue;
+                }
+
                 if ($existing && $conflictAction === 'overwrite') {
                     $existing->update([
                         'activity_date' => $item['activity_date'],
@@ -676,10 +683,24 @@ class DocxImportService
                     $targetDir = 'attachments/' . $activity->id;
                     Storage::disk('public')->makeDirectory($targetDir);
 
+                    $cleanToken = preg_replace('/[^a-zA-Z0-9_]/', '', $importToken);
+                    $expectedPrefix = 'temp_imports/' . $cleanToken . '/';
+
                     foreach ($item['images'] as $img) {
                         $tempPath = $img['temp_path'] ?? null;
-                        if ($tempPath && Storage::disk('public')->exists($tempPath)) {
-                            $fullTempPath = Storage::disk('public')->path($tempPath);
+                        if (! $tempPath || ! is_string($tempPath)) {
+                            continue;
+                        }
+
+                        // Keamanan: Validasi bahwa temp_path wajib berada strictly di direktori sesi impor saat ini
+                        $normalizedPath = str_replace('\\', '/', $tempPath);
+                        if (! str_starts_with($normalizedPath, $expectedPrefix) || str_contains($normalizedPath, '..')) {
+                            Log::warning("Percobaan manipulasi temp_path terdeteksi: {$tempPath}");
+                            continue;
+                        }
+
+                        if (Storage::disk('public')->exists($normalizedPath)) {
+                            $fullTempPath = Storage::disk('public')->path($normalizedPath);
                             $imgHash = file_exists($fullTempPath) ? hash_file('sha256', $fullTempPath) : null;
 
                             // Lewati jika lampiran gambar dengan hash konten yang sama sudah ada pada aktivitas ini
@@ -688,16 +709,16 @@ class DocxImportService
                                     ->where('file_hash', $imgHash)
                                     ->first();
                                 if ($existingAtt) {
-                                    Storage::disk('public')->delete($tempPath);
+                                    Storage::disk('public')->delete($normalizedPath);
                                     continue;
                                 }
                             }
 
-                            $permanentFilename = basename($tempPath);
+                            $permanentFilename = basename($normalizedPath);
                             $permanentPath = $targetDir . '/' . $permanentFilename;
 
                             // Move to permanent directory
-                            Storage::disk('public')->move($tempPath, $permanentPath);
+                            Storage::disk('public')->move($normalizedPath, $permanentPath);
 
                             ActivityAttachment::create([
                                 'activity_id' => $activity->id,

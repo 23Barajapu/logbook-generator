@@ -23,7 +23,7 @@
 @endif
 
 <div class="card" style="max-width: 840px;">
-    <form action="{{ route('mahasiswa.activities.update', $activity) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('mahasiswa.activities.update', $activity) }}" method="POST" enctype="multipart/form-data" data-upload-form data-process-title="Memperbarui Aktivitas" data-process-steps='["Memeriksa data aktivitas...", "Mengunggah lampiran baru...", "Menyimpan perubahan ke database..."]'>
         @csrf
         @method('PUT')
 

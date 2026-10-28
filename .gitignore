@@ -30,6 +30,11 @@ BUKU AKTIVITAS HARIAN*
 !resources/templates/*.docx
 !public/templates/*.docx
 scratch/
+plans/
+
+# Debug rendered outputs
+/storage/*.html
+/storage/*.pdf
 
 # File storage upload dan lampiran pengguna
 /storage/app/public/*

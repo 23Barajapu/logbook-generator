@@ -83,7 +83,7 @@
 </div>
 
 <!-- Main Form Konfirmasi Impor -->
-<form action="{{ route('mahasiswa.activities.import.confirm') }}" method="POST" enctype="multipart/form-data" id="confirm-import-form">
+<form action="{{ route('mahasiswa.activities.import.confirm') }}" method="POST" enctype="multipart/form-data" id="confirm-import-form" data-upload-form data-process-title="Menyimpan Aktivitas Logbook" data-process-steps='["Menyiapkan entri data aktivitas...", "Memindahkan foto dokumentasi ke media penyimpanan...", "Memperbarui database logbook Anda..."]'>
     @csrf
     <input type="hidden" name="token" value="{{ $token }}">
 
@@ -319,10 +319,16 @@ document.addEventListener('DOMContentLoaded', function () {
             showAlertModal('Pilih setidaknya satu aktivitas untuk disimpan ke database.', 'Aktivitas Belum Dipilih', 'warning');
             return;
         }
-        btnSaveTop?.setAttribute('disabled', 'disabled');
-        btnSaveBottom?.setAttribute('disabled', 'disabled');
-        if (btnSaveTop) btnSaveTop.innerHTML = 'Menyimpan ke Database...';
-        if (btnSaveBottom) btnSaveBottom.innerHTML = 'Menyimpan ke Database...';
+        if (btnSaveTop) {
+            btnSaveTop.style.opacity = '0.75';
+            btnSaveTop.style.cursor = 'wait';
+            btnSaveTop.innerHTML = 'Menyimpan ke Database...';
+        }
+        if (btnSaveBottom) {
+            btnSaveBottom.style.opacity = '0.75';
+            btnSaveBottom.style.cursor = 'wait';
+            btnSaveBottom.innerHTML = 'Menyimpan ke Database...';
+        }
     });
 });
 
@@ -333,6 +339,15 @@ function removeExtractedImage(actIdx, imgIdx) {
         box.remove();
         updateImageCount(actIdx);
     }
+}
+
+function escapeHtml(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 // Preview Upload Gambar Baru via Input File
@@ -349,9 +364,10 @@ function handleNewImagesUpload(input, actIdx) {
         const reader = new FileReader();
         reader.onload = function(e) {
             const previewBox = document.createElement('div');
+            const safeName = escapeHtml(file.name);
             previewBox.style.cssText = 'position: relative; width: 120px; height: 90px; border-radius: var(--r-sm); overflow: hidden; border: 2px dashed var(--accent); background: var(--bg-surface); box-shadow: var(--shadow-sm);';
             previewBox.innerHTML = `
-                <img src="${e.target.result}" alt="${file.name}" style="width: 100%; height: 100%; object-fit: cover;" title="Baru: ${file.name}">
+                <img src="${e.target.result}" alt="${safeName}" style="width: 100%; height: 100%; object-fit: cover;" title="Baru: ${safeName}">
                 <span style="position: absolute; bottom: 2px; left: 2px; background: var(--accent); color: #fff; font-size: 9.5px; font-weight: 700; padding: 1px 4px; border-radius: 2px;">BARU</span>
             `;
             container.appendChild(previewBox);

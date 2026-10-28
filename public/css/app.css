@@ -29,17 +29,25 @@
     --info:         #38bdf8;
     --info-dim:     #38bdf818;
     --info-text:    #7dd3fc;
-    --font: 'Inter', system-ui, -apple-system, sans-serif;
-    --r-sm: 6px;
-    --r-md: 10px;
-    --r-lg: 14px;
-    --r-xl: 20px;
-    --shadow-sm:  0 1px 3px rgb(0 0 0 / 0.4);
-    --shadow-md:  0 4px 16px rgb(0 0 0 / 0.5);
-    --shadow-lg:  0 8px 32px rgb(0 0 0 / 0.6);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "SF Pro", "Inter", system-ui, -system-ui, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+    --r-xs: 4px;
+    --r-sm: 8px;
+    --r-md: 12px;
+    --r-lg: 16px;
+    --r-xl: 22px;
+    --shadow-xs:  0 1px 2px rgba(0, 0, 0, 0.25);
+    --shadow-sm:  0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    --shadow-md:  0 8px 24px -4px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    --shadow-lg:  0 20px 48px -12px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    --shadow-modal: 0 32px 72px -16px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.08);
     --sidebar-w: 240px;
-    --t-fast: 0.12s ease;
-    --t-mid:  0.2s ease;
+    --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --t-press: 80ms cubic-bezier(0.2, 0, 0, 1);
+    --t-fast: 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    --t-mid:  0.25s cubic-bezier(0.16, 1, 0.3, 1);
     /* legacy compat */
     --font-sans: var(--font);
     --radius-sm: var(--r-sm);
@@ -65,7 +73,10 @@
     padding: 0;
 }
 
-html { scroll-behavior: smooth; }
+html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+}
 
 body {
     font-family: var(--font);
@@ -75,6 +86,27 @@ body {
     font-size: 14px;
     min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Custom Sleek Scrollbar (macOS Style) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.14);
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.28);
+    background-clip: content-box;
 }
 
 a {
@@ -207,8 +239,10 @@ img, svg { display: block; max-width: 100%; }
 .sidebar {
     width: var(--sidebar-w);
     flex-shrink: 0;
-    background: var(--bg-surface);
-    border-right: 1px solid var(--border);
+    background: rgba(21, 21, 31, 0.94);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -250,6 +284,7 @@ img, svg { display: block; max-width: 100%; }
     font-weight: 700;
     color: var(--text-primary);
     line-height: 1.2;
+    letter-spacing: -0.015em;
 }
 
 .sidebar-brand-role {
@@ -288,13 +323,16 @@ img, svg { display: block; max-width: 100%; }
     font-size: 13.5px;
     font-weight: 500;
     text-decoration: none;
-    transition: background var(--t-fast), color var(--t-fast);
+    transition: background var(--t-fast), color var(--t-fast), transform var(--t-press);
     min-height: 40px;
 }
 .sidebar-link:hover {
     background: var(--bg-hover);
     color: var(--text-primary);
     text-decoration: none;
+}
+.sidebar-link:active {
+    transform: scale(0.98);
 }
 .sidebar-link.active {
     background: var(--accent-dim);
@@ -357,8 +395,11 @@ img, svg { display: block; max-width: 100%; }
 
 .topbar {
     height: 56px;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border);
+    background: rgba(21, 21, 31, 0.75);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     padding: 0 28px;
@@ -393,7 +434,7 @@ img, svg { display: block; max-width: 100%; }
 .main-content {
     flex: 1;
     padding: 28px 28px 48px;
-    animation: fadeIn 0.25s ease both;
+    animation: fadeIn 0.25s var(--ease-spring) both;
 }
 
 /* ── PAGE HEADER ── */
@@ -408,9 +449,9 @@ img, svg { display: block; max-width: 100%; }
 
 .page-title {
     font-size: 22px;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
     line-height: 1.2;
 }
 
@@ -418,6 +459,7 @@ img, svg { display: block; max-width: 100%; }
     font-size: 13px;
     color: var(--text-muted);
     margin-top: 4px;
+    letter-spacing: -0.005em;
 }
 
 .page-actions {
@@ -440,13 +482,19 @@ img, svg { display: block; max-width: 100%; }
     border: 1px solid var(--border);
     border-radius: var(--r-lg);
     padding: 20px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--shadow-sm);
     transition: transform var(--t-mid), box-shadow var(--t-mid), border-color var(--t-mid);
-    animation: fadeSlideUp 0.35s ease both;
+    animation: fadeSlideUp 0.35s var(--ease-spring) both;
 }
-.stat-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-    border-color: #3a3a5a;
+@media (hover: hover) and (pointer: fine) {
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), var(--shadow-md);
+        border-color: #3a3a5a;
+    }
+}
+.stat-card:active {
+    transform: scale(0.985);
 }
 
 .stat-icon {
@@ -474,7 +522,8 @@ img, svg { display: block; max-width: 100%; }
     font-size: 30px;
     font-weight: 800;
     color: var(--text-primary);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
     line-height: 1;
 }
 
@@ -490,9 +539,10 @@ img, svg { display: block; max-width: 100%; }
     background: var(--bg-surface);
     border: 1px solid var(--border);
     border-radius: var(--r-lg);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), var(--shadow-sm);
     padding: 24px;
     margin-bottom: 20px;
-    animation: fadeSlideUp 0.3s ease both;
+    animation: fadeSlideUp 0.3s var(--ease-spring) both;
 }
 
 .card-header {
@@ -507,7 +557,7 @@ img, svg { display: block; max-width: 100%; }
     font-size: 15px;
     font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
 }
 
 /* ── BADGES ── */
@@ -632,23 +682,28 @@ img, svg { display: block; max-width: 100%; }
     border-radius: var(--r-md);
     cursor: pointer;
     border: 1px solid transparent;
-    transition: all var(--t-fast);
+    transition: transform var(--t-fast), background-color var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast), color var(--t-fast);
     text-decoration: none;
     white-space: nowrap;
     letter-spacing: -0.01em;
+    user-select: none;
+    -webkit-user-select: none;
 }
 .btn:hover { text-decoration: none; }
-.btn:active { transform: scale(0.97); }
+.btn:active {
+    transform: scale(0.97);
+    transition: transform var(--t-press);
+}
 
 .btn-primary {
     background: var(--accent);
     color: #fff;
     border-color: var(--accent);
-    box-shadow: 0 2px 12px #6d6aff30;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 2px 10px rgba(109, 106, 255, 0.35);
 }
 .btn-primary:hover {
     background: var(--accent-hover);
-    box-shadow: 0 4px 20px #6d6aff50;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 18px rgba(109, 106, 255, 0.5);
     color: #fff;
 }
 
@@ -656,6 +711,7 @@ img, svg { display: block; max-width: 100%; }
     background: var(--bg-elevated);
     color: var(--text-secondary);
     border-color: var(--border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), var(--shadow-xs);
 }
 .btn-secondary:hover {
     background: var(--bg-hover);
@@ -667,15 +723,25 @@ img, svg { display: block; max-width: 100%; }
     background: var(--success);
     color: #fff;
     border-color: var(--success);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 10px rgba(16, 185, 129, 0.3);
 }
-.btn-success:hover { background: #0da374; color: #fff; }
+.btn-success:hover {
+    background: #0da374;
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 16px rgba(16, 185, 129, 0.45);
+}
 
 .btn-danger {
     background: var(--danger);
     color: #fff;
     border-color: var(--danger);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 10px rgba(239, 68, 68, 0.3);
 }
-.btn-danger:hover { background: #dc2626; color: #fff; }
+.btn-danger:hover {
+    background: #dc2626;
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 4px 16px rgba(239, 68, 68, 0.45);
+}
 
 .btn-ghost {
     background: transparent;
@@ -725,7 +791,7 @@ img, svg { display: block; max-width: 100%; }
     background: var(--bg-elevated);
     border: 1px solid var(--border);
     border-radius: var(--r-md);
-    transition: border-color var(--t-fast), box-shadow var(--t-fast);
+    transition: border-color var(--t-fast), box-shadow var(--t-fast), background var(--t-fast);
     -webkit-appearance: none;
     appearance: none;
 }
@@ -748,10 +814,13 @@ img, svg { display: block; max-width: 100%; }
     background-color: var(--warning-dim) !important;
 }
 .form-control::placeholder { color: var(--text-muted); }
+.form-control:hover:not(:focus) {
+    border-color: #383854;
+}
 .form-control:focus {
     border-color: var(--accent);
     outline: none;
-    box-shadow: 0 0 0 3px #6d6aff22;
+    box-shadow: 0 0 0 3.5px rgba(109, 106, 255, 0.22);
 }
 
 select.form-control {
@@ -872,7 +941,7 @@ textarea.form-control {
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
-    transition: all var(--t-fast);
+    transition: transform var(--t-fast), background-color var(--t-fast), border-color var(--t-fast), color var(--t-fast);
     font-family: var(--font);
     margin-bottom: 6px;
     text-align: left;
@@ -920,7 +989,7 @@ textarea.form-control {
 @media (max-width: 768px) {
     .sidebar {
         transform: translateX(-100%);
-        transition: transform 0.25s ease;
+        transition: transform 0.3s var(--ease-drawer);
     }
     .sidebar.open {
         transform: translateX(0);
@@ -964,8 +1033,9 @@ textarea.form-control {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(4px);
+    background: rgba(5, 5, 10, 0.68);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
     z-index: 1000;
     align-items: center;
     justify-content: center;
@@ -974,19 +1044,39 @@ textarea.form-control {
 .modal-backdrop.active {
     display: flex;
 }
+.modal-backdrop.closing {
+    opacity: 0;
+    transition: opacity 160ms var(--ease-out);
+}
+.modal-backdrop.closing .modal-box,
+.modal-backdrop.closing .modal-box-confirm {
+    animation: modalExit 160ms var(--ease-out) forwards;
+}
+@keyframes modalExit {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.97) translateY(6px);
+    }
+}
 .modal-box {
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
+    background: rgba(21, 21, 31, 0.94);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: var(--r-xl);
     width: 100%;
     max-width: 580px;
-    box-shadow: var(--shadow-lg);
-    animation: modalSlide 0.2s ease-out;
+    box-shadow: var(--shadow-modal);
+    animation: modalSpringIn 0.32s var(--ease-spring) both;
     overflow: hidden;
 }
-@keyframes modalSlide {
-    from { opacity: 0; transform: translateY(-16px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes modalSpringIn {
+    from { opacity: 0; transform: scale(0.96) translateY(8px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
 }
 .modal-header {
     display: flex;
@@ -1148,10 +1238,13 @@ svg.w-5.h-5 {
     max-width: 440px !important;
     padding: 0 !important;
     overflow: hidden;
-    background: var(--bg-surface);
-    border: 1px solid var(--border);
+    background: rgba(21, 21, 31, 0.96);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: var(--r-xl);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-modal);
+    animation: modalSpringIn 0.32s var(--ease-spring) both;
 }
 
 .modal-confirm-icon {
@@ -1188,6 +1281,7 @@ svg.w-5.h-5 {
     font-weight: 700;
     color: var(--text-primary);
     margin: 0 0 6px 0;
+    letter-spacing: -0.015em;
 }
 
 .modal-confirm-message {
@@ -1203,7 +1297,431 @@ svg.w-5.h-5 {
     justify-content: flex-end;
     gap: 10px;
     padding: 14px 20px;
-    background: var(--bg-elevated);
+    background: rgba(28, 28, 42, 0.7);
     border-top: 1px solid var(--border);
+}
+
+/* ── Dropzone & Drag-over Polish ── */
+.dropzone-container {
+    border: 2px dashed var(--border);
+    border-radius: var(--r-lg);
+    padding: 44px 24px;
+    text-align: center;
+    background: var(--bg-elevated);
+    cursor: pointer;
+    transition: transform var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast), background-color var(--t-fast);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+}
+.dropzone-container:hover,
+.dropzone-container.is-dragover {
+    border-color: var(--accent) !important;
+    background-color: rgba(109, 106, 255, 0.08) !important;
+    transform: scale(1.01);
+    box-shadow: 0 8px 30px rgba(109, 106, 255, 0.22);
+}
+
+/* ── Field Progress Bar & Table Stagger ── */
+.field-progress-bar {
+    transition: width 0.6s var(--ease-spring);
+    will-change: width;
+}
+
+.table tbody tr:nth-child(1) { animation: fadeIn 0.25s var(--ease-spring) both; animation-delay: 0.03s; }
+.table tbody tr:nth-child(2) { animation: fadeIn 0.25s var(--ease-spring) both; animation-delay: 0.06s; }
+.table tbody tr:nth-child(3) { animation: fadeIn 0.25s var(--ease-spring) both; animation-delay: 0.09s; }
+.table tbody tr:nth-child(4) { animation: fadeIn 0.25s var(--ease-spring) both; animation-delay: 0.12s; }
+
+/* ── Apple-Grade Process Animations: Upload & Download Feedback ── */
+
+/* 1. Upload Processing Overlay / Modal */
+.process-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(10, 10, 15, 0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 220ms var(--ease-out), visibility 220ms;
+}
+
+.process-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.process-overlay.closing {
+    opacity: 0;
+    transition: opacity 160ms var(--ease-out);
+}
+
+.process-card {
+    background: var(--bg-surface);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--r-xl);
+    padding: 32px 28px;
+    width: 100%;
+    max-width: 440px;
+    box-shadow: var(--shadow-modal);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+    transform: scale(0.96) translateY(10px);
+    transition: transform 250ms var(--ease-spring);
+}
+
+.process-overlay.active .process-card {
+    transform: scale(1) translateY(0);
+}
+
+.process-overlay.closing .process-card {
+    transform: scale(0.96) translateY(10px);
+    transition: transform 160ms var(--ease-out);
+}
+
+/* Upload Graphic with Concentric Pulsing Ring & Floating Icon */
+.process-icon-wrap {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    margin: 0 auto 20px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.process-ring-pulse {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    opacity: 0.3;
+    animation: ringPulse 2.4s var(--ease-out) infinite;
+}
+
+.process-ring-spinner {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2.5px solid transparent;
+    border-top-color: var(--accent);
+    border-right-color: #a855f7;
+    animation: spinTrack 1.2s linear infinite;
+}
+
+.process-icon-inner {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    box-shadow: var(--shadow-sm);
+    animation: uploadFloat 2s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+    0% { transform: scale(0.88); opacity: 0.7; }
+    50% { transform: scale(1.15); opacity: 0.15; }
+    100% { transform: scale(0.88); opacity: 0.7; }
+}
+
+@keyframes uploadFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes spinTrack {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.process-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+/* Step Description with Smooth Crossfade */
+.process-step-container {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.process-step-text {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+}
+
+.process-step-text.fading {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+
+/* Progress Track & Shimmer */
+.process-track {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-hover);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 14px;
+}
+
+.process-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 35%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent) 0%, #a855f7 50%, var(--accent) 100%);
+    animation: progressShimmer 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes progressShimmer {
+    0% { transform: translateX(-100%); width: 30%; }
+    50% { width: 55%; }
+    100% { transform: translateX(350%); width: 30%; }
+}
+
+.process-subtext {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+/* 2. Download Feedback Toast / Island */
+.download-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: var(--bg-elevated);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--r-md);
+    box-shadow: var(--shadow-lg), 0 0 24px rgba(109, 106, 255, 0.18);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 320px;
+    max-width: 420px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transform: translateY(20px) scale(0.96);
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
+    transition: transform 250ms var(--ease-spring), opacity 250ms var(--ease-out), visibility 250ms;
+}
+
+.download-toast.active {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.download-toast.closing {
+    transform: translateY(16px) scale(0.96);
+    opacity: 0;
+    transition: transform 180ms var(--ease-out), opacity 180ms var(--ease-out);
+}
+
+.download-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--r-sm);
+    background: var(--accent-dim);
+    border: 1px solid rgba(109, 106, 255, 0.3);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 180ms var(--ease-out), color 180ms var(--ease-out), border-color 180ms var(--ease-out);
+}
+
+.download-icon-wrap.is-pdf {
+    background: var(--danger-dim);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: var(--danger-text);
+}
+
+.download-icon-wrap.is-success {
+    background: var(--success-dim);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: var(--success-text);
+}
+
+.download-icon-arrow {
+    animation: downloadDip 1.5s ease-in-out infinite;
+}
+
+@keyframes downloadDip {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(2.5px); }
+}
+
+.download-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.download-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.download-step-text {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: opacity 160ms var(--ease-out);
+}
+
+.download-progress-bar {
+    width: 100%;
+    height: 3px;
+    background: var(--bg-hover);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 8px;
+    position: relative;
+}
+
+.download-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent) 0%, #38bdf8 100%);
+    border-radius: 999px;
+    transition: width 3.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.download-icon-wrap.is-pdf ~ .download-body .download-progress-fill {
+    background: linear-gradient(90deg, #ef4444 0%, #f97316 100%);
+}
+
+.download-close-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 2px 6px;
+    line-height: 1;
+    transition: color 150ms var(--ease-out);
+}
+
+.download-close-btn:hover {
+    color: var(--text-primary);
+}
+
+/* Button Loading Micro-Animation */
+.btn.is-downloading {
+    opacity: 0.85;
+    position: relative;
+}
+
+.btn-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinTrack 0.8s linear infinite;
+    margin-right: 6px;
+    vertical-align: -1px;
+}
+
+/* ── Apple Design: Reduced Motion & Accessibility ── */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+    .modal-box,
+    .modal-box-confirm,
+    .process-card,
+    .download-toast {
+        animation: none !important;
+        transform: none !important;
+    }
+    .process-ring-pulse,
+    .process-ring-spinner,
+    .process-icon-inner,
+    .download-icon-arrow,
+    .process-fill,
+    .btn-spinner {
+        animation: none !important;
+    }
+    .btn:active, .sidebar-link:active, .stat-card:active, .dropzone-container:hover, .dropzone-container.is-dragover {
+        transform: none !important;
+    }
+    .field-progress-bar,
+    .download-progress-fill {
+        transition: none !important;
+    }
+    .table tbody tr {
+        animation: none !important;
+    }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+    .topbar,
+    .sidebar,
+    .modal-backdrop,
+    .modal-box,
+    .modal-box-confirm {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+        background-color: var(--bg-surface) !important;
+    }
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.85) !important;
+    }
+}
+
+@media (prefers-contrast: more) {
+    :root {
+        --border: #4a4a66;
+        --border-light: #38384f;
+    }
 }
 

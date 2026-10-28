@@ -16,10 +16,10 @@
                     Mencakup seluruh catatan aktivitas harian PKL sejak awal hingga akhir kegiatan dalam satu dokumen lengkap.
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
-                    <a href="{{ route('documents.docx', $internship) }}" class="btn btn-primary" id="btn-export-all-docx">
+                    <a href="{{ route('documents.docx', $internship) }}" class="btn btn-primary" id="btn-export-all-docx" data-download="docx" data-download-title="Mengunduh Seluruh Logbook (DOCX)">
                         Unduh DOCX (.docx)
                     </a>
-                    <a href="{{ route('documents.pdf', $internship) }}" class="btn btn-secondary" id="btn-export-all-pdf">
+                    <a href="{{ route('documents.pdf', $internship) }}" class="btn btn-secondary" id="btn-export-all-pdf" data-download="pdf" data-download-title="Mengunduh Seluruh Logbook (PDF)">
                         Unduh PDF (.pdf)
                     </a>
                 </div>
@@ -48,10 +48,10 @@
                             @endforeach
                         </select>
                         <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
-                            <a id="btn-export-week-docx" href="#" class="btn btn-primary">
+                            <a id="btn-export-week-docx" href="#" class="btn btn-primary" data-download="docx" data-download-title="Mengunduh Logbook Mingguan (DOCX)">
                                 Unduh DOCX Minggu Ini
                             </a>
-                            <a id="btn-export-week-pdf" href="#" class="btn btn-secondary">
+                            <a id="btn-export-week-pdf" href="#" class="btn btn-secondary" data-download="pdf" data-download-title="Mengunduh Logbook Mingguan (PDF)">
                                 Unduh PDF Minggu Ini
                             </a>
                         </div>
@@ -102,7 +102,7 @@
                     Unduh file template dokumen Microsoft Word resmi berstandar institusional untuk diisi secara offline atau dibagikan ke pengguna / mahasiswa lain.
                 </div>
                 <div style="display: flex; gap: 8px; margin-top: 4px;">
-                    <a href="{{ route('documents.template') }}" class="btn btn-secondary" id="btn-export-template-docx">
+                    <a href="{{ route('documents.template') }}" class="btn btn-secondary" id="btn-export-template-docx" data-download="docx" data-download-title="Mengunduh Template Laporan (.docx)">
                         Unduh Template (.docx)
                     </a>
                 </div>
@@ -122,8 +122,11 @@ function openExportModal() {
 
 function closeExportModal() {
     const modal = document.getElementById('modal-export');
-    if (modal) {
-        modal.classList.remove('active');
+    if (modal && modal.classList.contains('active')) {
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.classList.remove('active', 'closing');
+        }, 160);
     }
 }
 
@@ -159,6 +162,13 @@ function downloadCustomDate(format) {
         return;
     }
     
+    if (window.showDownloadProgress) {
+        window.showDownloadProgress({
+            format: format,
+            title: format === 'pdf' ? 'Mengunduh Dokumen PDF Kustom' : 'Mengunduh Dokumen Word Kustom'
+        });
+    }
+
     const baseUrl = format === 'pdf' 
         ? "{{ route('documents.pdf', $internship) }}" 
         : "{{ route('documents.docx', $internship) }}";

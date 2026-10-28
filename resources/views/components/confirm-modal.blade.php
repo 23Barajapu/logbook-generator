@@ -93,12 +93,22 @@
         });
     };
 
+    function smoothCloseModal(dialogEl, callback) {
+        if (!dialogEl || !dialogEl.classList.contains('active')) return;
+        dialogEl.classList.add('closing');
+        setTimeout(() => {
+            dialogEl.classList.remove('active', 'closing');
+            if (callback) callback();
+        }, 160);
+    }
+
     function closeConfirm(result) {
-        confirmDialog.classList.remove('active');
-        if (appConfirmResolve) {
-            appConfirmResolve(result);
-            appConfirmResolve = null;
-        }
+        smoothCloseModal(confirmDialog, () => {
+            if (appConfirmResolve) {
+                appConfirmResolve(result);
+                appConfirmResolve = null;
+            }
+        });
     }
 
     if (confirmSubmitBtn) confirmSubmitBtn.addEventListener('click', () => closeConfirm(true));
@@ -128,11 +138,12 @@
     };
 
     function closeAlert() {
-        alertDialog.classList.remove('active');
-        if (appAlertResolve) {
-            appAlertResolve();
-            appAlertResolve = null;
-        }
+        smoothCloseModal(alertDialog, () => {
+            if (appAlertResolve) {
+                appAlertResolve();
+                appAlertResolve = null;
+            }
+        });
     }
 
     if (alertOkBtn) alertOkBtn.addEventListener('click', closeAlert);
